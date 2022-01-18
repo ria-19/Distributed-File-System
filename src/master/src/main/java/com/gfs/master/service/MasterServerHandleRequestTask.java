@@ -1,5 +1,6 @@
 package com.gfs.master.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gfs.master.model.Chunk;
 import lombok.AllArgsConstructor;
 import lombok.Data;
