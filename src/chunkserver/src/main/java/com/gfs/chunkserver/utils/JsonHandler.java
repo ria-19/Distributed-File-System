@@ -13,15 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class JsonHandler {
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    static ObjectMapper objectMapper = new ObjectMapper();
 
-    public String convertObjectToString(Object object) throws JsonProcessingException {
-        String finalString = objectMapper.writeValueAsString(object);
-        return finalString;
+    public static String convertObjectToString(Object object) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(object);
     }
 
-    public <T> T a(String stringValue, Class<T> className) throws JacksonException {
-        T object = objectMapper.readValue(stringValue, className);
-        return object;
+    public static <T> T convertStringToObject(String stringValue, Class<T> className) throws JacksonException {
+        return objectMapper.readValue(stringValue, className);
     }
 }

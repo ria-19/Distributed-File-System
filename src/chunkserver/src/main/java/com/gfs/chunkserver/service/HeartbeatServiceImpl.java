@@ -1,7 +1,8 @@
 package com.gfs.chunkserver.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gfs.chunkserver.model.Chunk;
+import com.gfs.chunkserver.model.ChunksMetadata;
+import com.gfs.chunkserver.model.ServerRequest;
+import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,9 +27,9 @@ public class HeartbeatServiceImpl {
         log.info("Connected to server : {}", socket);
         OutputStream outputStream = socket.getOutputStream();
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        Chunk chunk = new Chunk("handle-1", "Sample Data");
-        ObjectMapper objectMapper = new ObjectMapper();
-        String chunkstring = objectMapper.writeValueAsString(chunk);
+        ServerRequest<ChunksMetadata> chunksMetadataServerRequest = new ServerRequest<>();
+        chunksMetadataServerRequest.setRequest(new ChunksMetadata("handle-1", "Sample Data"));
+        String chunkstring = JsonHandler.convertObjectToString(chunksMetadataServerRequest);
         objectOutputStream.writeObject(chunkstring);
         outputStream.close();
         socket.close();

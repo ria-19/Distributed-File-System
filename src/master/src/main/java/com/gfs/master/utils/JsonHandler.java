@@ -15,7 +15,11 @@ public class JsonHandler {
         return objectMapper.writeValueAsString(object);
     }
 
-    public static <T> T a(String stringValue, Class<T> className) throws JacksonException {
+    public static <T> T convertStringToObject(String stringValue, Class<T> className) throws JacksonException {
         return objectMapper.readValue(stringValue, className);
+    }
+
+    public static <T> T convertObjectToOtherObject(Object object, Class<T> targetClassName) {
+        return objectMapper.convertValue(object, targetClassName);
     }
 }
