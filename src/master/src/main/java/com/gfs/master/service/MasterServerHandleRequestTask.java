@@ -1,10 +1,12 @@
 package com.gfs.master.service;
 
-import com.gfs.master.model.Chunk;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gfs.master.model.ClientChunksMetadata;
+import com.gfs.master.model.ServerRequest;
+import com.gfs.master.utils.JsonHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -25,12 +27,19 @@ public class MasterServerHandleRequestTask implements Runnable{
             log.info("Remote Socket Address : " + socket.getRemoteSocketAddress());
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            String data = (String)objectInputStream.readObject();
-            log.info("Data : {}", data);
-            if(data.equals("chunkserver")){
-                HeartbeatServiceImpl.updateHeartBeatOfServer(socket.getRemoteSocketAddress().toString());
-            } else {
-                // TODO : Send metadata to client
+            String request = (String)objectInputStream.readObject();
+            ServerRequest serverRequest = JsonHandler.convertStringToObject(request, ServerRequest.class);
+            log.info("Data : {}", request);
+            switch(serverRequest.getSource()){
+                case CHUNKSERVER:
+                    ClientChunksMetadata clientChunksMetadata = JsonHandler.convertObjectToOtherObject(serverRequest.getRequest(), ClientChunksMetadata.class);
+                    HeartbeatServiceImpl.updateHeartBeatOfServer(socket.getRemoteSocketAddress().toString(), clientChunksMetadata);
+                    break;
+                case CLIENT:
+                    // TODO : Send metadata to client
+                    break;
+                default:
+                    log.error("Incorrect source");
             }
             socket.close();
         } catch (Exception e) {

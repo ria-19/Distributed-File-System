@@ -1,8 +1,7 @@
 package com.gfs.master.service;
 
 import com.gfs.master.Constants;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.gfs.master.model.ClientChunksMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -48,9 +47,9 @@ public class HeartbeatServiceImpl {
 
     /**
      * Updates the heartbeat of chunkserver with latest heartbeat time
-     * @param : remoteSocket - url of remote chunkserver
+     * @param remoteSocket : url of remote chunkserver
      */
-    public static void updateHeartBeatOfServer(String remoteSocket) {
+    public static void updateHeartBeatOfServer(String remoteSocket, ClientChunksMetadata chunksMetadata) {
         log.info("Heartbeat received from {}", remoteSocket);
         lastHeartBeatTimeOfServers.put(remoteSocket, new Date());
     }
