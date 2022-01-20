@@ -1,6 +1,7 @@
 package com.gfs.master.service;
 
 import com.gfs.master.Constants;
+import com.gfs.master.model.ChunkServerRequest;
 import com.gfs.master.model.ClientChunksMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -28,7 +29,7 @@ public class HeartbeatServiceImpl {
      * Scheduled function which iterates over all heartbeats received and
      * removes the dead servers
      */
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = Constants.heartBeatCheckTimeInterval)
     public static void checkLiveChunkServers() {
         log.info("Checking Live ChunkServers");
         long currentTimeInMillis = new Date().getTime();
@@ -40,17 +41,21 @@ public class HeartbeatServiceImpl {
                 log.info("Server {} removed : ", serverUrl);
                 lastHeartBeatTimeOfServers.remove(serverUrl);
             } else{
-                //TODO : Update chunks metadata
+                //TODO : Update chunks metadata and remove this chunkserver
             }
         }
+        log.info("Active servers and their last heartbeats: {}", lastHeartBeatTimeOfServers);
     }
 
     /**
      * Updates the heartbeat of chunkserver with latest heartbeat time
      * @param remoteSocket : url of remote chunkserver
      */
-    public static void updateHeartBeatOfServer(String remoteSocket, ClientChunksMetadata chunksMetadata) {
+    public static void updateHeartBeatOfServer(String remoteSocket, ChunkServerRequest chunksMetadata) {
         log.info("Heartbeat received from {}", remoteSocket);
         lastHeartBeatTimeOfServers.put(remoteSocket, new Date());
+        if(chunksMetadata.isContainsChunksMetadata()){
+            //TODO: Update chunks metadata
+        }
     }
 }
