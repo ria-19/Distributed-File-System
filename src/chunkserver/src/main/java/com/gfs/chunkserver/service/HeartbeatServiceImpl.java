@@ -35,6 +35,7 @@ public class HeartbeatServiceImpl {
                 chunkServerRequest.setContainsChunksMetadata(true);
                 // TODO: fetch actual chunks metadata
                 chunkServerRequest.setClientChunksMetadata(new ClientChunksMetadata("handle-1", "Sample Data"));
+                heartBeatCounter = 0;
             } else {
                 chunkServerRequest.setContainsChunksMetadata(false);
             }
