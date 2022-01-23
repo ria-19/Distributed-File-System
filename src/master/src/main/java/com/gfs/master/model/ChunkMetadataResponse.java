@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChunkMetaadataResponse {
+public class ChunkMetadataResponse {
     private String filename;
     private Integer offset;
     private ChunkMetadata chunkMetadata;

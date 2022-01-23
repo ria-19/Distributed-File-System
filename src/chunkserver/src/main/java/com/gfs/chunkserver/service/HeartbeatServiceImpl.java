@@ -1,7 +1,8 @@
 package com.gfs.chunkserver.service;
 
 import com.gfs.chunkserver.model.ChunkServerRequest;
-import com.gfs.chunkserver.model.ClientChunksMetadata;
+import com.gfs.chunkserver.model.ChunkServerChunkMetadata;
+import com.gfs.chunkserver.model.Location;
 import com.gfs.chunkserver.model.Source;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * created by nikunjagarwal on 17-01-2022
@@ -33,8 +35,7 @@ public class HeartbeatServiceImpl {
             ChunkServerRequest chunkServerRequest = new ChunkServerRequest();
             if(heartBeatCounter == 6) {
                 chunkServerRequest.setContainsChunksMetadata(true);
-                // TODO: fetch actual chunks metadata
-                chunkServerRequest.setClientChunksMetadata(new ClientChunksMetadata("handle-1", "Sample Data"));
+                chunkServerRequest.setChunkServerChunkMetadataList(chunkServerRequest.getChunkServerChunkMetadataList());
                 heartBeatCounter = 0;
             } else {
                 chunkServerRequest.setContainsChunksMetadata(false);
@@ -71,5 +72,16 @@ public class HeartbeatServiceImpl {
             log.error("Error:", e);
             socket.close();
         }
+    }
+
+    private ArrayList<ChunkServerChunkMetadata> fetchChunkServerMetadata() {
+        ArrayList<ChunkServerChunkMetadata> chunkMetadataList = new ArrayList<>();
+        //TODO: Fetch actual metadata instead of mock chunkmetadata
+        ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
+        chunkMetadata.setChunkHandle(12345);
+        Location location = new Location("/mock-path",2);
+        chunkMetadata.setLocation(location);
+        chunkMetadataList.add(chunkMetadata);
+        return  chunkMetadataList;
     }
 }

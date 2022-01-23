@@ -14,5 +14,5 @@ import java.util.ArrayList;
 @NoArgsConstructor
 public class ChunkServerRequest extends ServerRequest{
     private boolean containsChunksMetadata;
-    private ArrayList<ChunkServerChunkMetadata> clientChunksMetadata;
+    private ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList;
 }
