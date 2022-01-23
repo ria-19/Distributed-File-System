@@ -31,7 +31,6 @@ public class HeartbeatServiceImpl {
     @Scheduled(fixedDelay = Constants.heartBeatCheckTimeInterval)
     public static void checkLiveChunkServers() {
         log.info("Checking Live ChunkServers");
-        log.info("uuid={}", UUID.randomUUID());
         long currentTimeInMillis = new Date().getTime();
         for(Map.Entry lastHeartBeatTime: lastHeartBeatTimeOfServers.entrySet()) {
             String serverUrl = (String) lastHeartBeatTime.getKey();
@@ -52,7 +51,7 @@ public class HeartbeatServiceImpl {
      * @param chunkServerRequest: chunkserver request containing chunk metadata
      */
     public static void updateHeartBeatOfServer(String remoteSocket, ChunkServerRequest chunkServerRequest) {
-        log.info("Heartbeat received from {}", remoteSocket);
+        log.info("Updating heartbeat inside updateHeartBeatOfServer() from {}", remoteSocket);
         lastHeartBeatTimeOfServers.put(remoteSocket, new Date());
         if(chunkServerRequest.isContainsChunksMetadata()){
             ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = addChunkServerDetails(remoteSocket, chunkServerRequest.getChunkServerChunkMetadataList());
@@ -68,6 +67,7 @@ public class HeartbeatServiceImpl {
      * @return ArrayList<ChunkServerChunkMetadata>: updated list of chunk metadata
      */
     private static ArrayList<ChunkServerChunkMetadata> addChunkServerDetails(String remoteSocket, ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList){
+        log.info("Inside addChunkServerDetails()");
         ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = new ArrayList<>();
         for(ChunkServerChunkMetadata chunkServerChunkMetadata: chunkServerChunkMetadataList) {
             Location location = chunkServerChunkMetadata.getLocation();
