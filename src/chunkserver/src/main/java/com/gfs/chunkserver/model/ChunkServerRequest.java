@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServerRequest <T>{
-    private final String source = "CHUNKSERVER";
-    private T request;
+public class ChunkServerRequest{
+    private boolean containsChunksMetadata;
+    private ClientChunksMetadata clientChunksMetadata;
 }

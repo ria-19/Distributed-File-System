@@ -9,8 +9,5 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class ServerRequest <T>{
-    private Source source;
-    private T request;
+public class ServerRequest {
 }

@@ -1,16 +1,15 @@
 package com.gfs.chunkserver.service;
 
-import com.gfs.chunkserver.model.ChunksMetadata;
-import com.gfs.chunkserver.model.ServerRequest;
+import com.gfs.chunkserver.model.ChunkServerRequest;
+import com.gfs.chunkserver.model.ClientChunksMetadata;
+import com.gfs.chunkserver.model.Source;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
 /**
@@ -21,17 +20,56 @@ import java.net.Socket;
 @Slf4j
 public class HeartbeatServiceImpl {
 
-    @Scheduled(fixedDelay = 1000)
-    public void sendHearbeatToMaster() throws IOException {
-        Socket socket = new Socket("127.0.0.1",8018);
+    /**
+     * It sends 2 types of heartbeats to Master Server at regular intervals
+     * 1. simple heartbeat at x intervals    : without chunk metadata
+     * 2. metadata heartbeat at 6x intervals : with chunk metadata
+     * @param objectOutputStream : outputstream for that socket connection
+     */
+    private static void sendHearbeatToMaster(ObjectOutputStream objectOutputStream) throws IOException, InterruptedException {
+        int heartBeatCounter = 0;
+        while(true) {
+            log.info("Sending heartbeat to master server");
+            ChunkServerRequest chunkServerRequest = new ChunkServerRequest();
+            if(heartBeatCounter == 6) {
+                chunkServerRequest.setContainsChunksMetadata(true);
+                // TODO: fetch actual chunks metadata
+                chunkServerRequest.setClientChunksMetadata(new ClientChunksMetadata("handle-1", "Sample Data"));
+                heartBeatCounter = 0;
+            } else {
+                chunkServerRequest.setContainsChunksMetadata(false);
+            }
+            String chunkstring = JsonHandler.convertObjectToString(chunkServerRequest);
+            objectOutputStream.writeObject(chunkstring);
+            heartBeatCounter++;
+            Thread.sleep(5000);
+        }
+    }
+
+    /**
+     * This method establishes connection with master
+     * @param host: master server url
+     * @param port : master server port
+     * @return Socket: socket connected with master server
+     */
+    private static Socket establishConnectionWithMaster(String host, int port) throws IOException {
+        Socket socket = new Socket(host, port);
         log.info("Connected to server : {}", socket);
-        OutputStream outputStream = socket.getOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        ServerRequest<ChunksMetadata> chunksMetadataServerRequest = new ServerRequest<>();
-        chunksMetadataServerRequest.setRequest(new ChunksMetadata("handle-1", "Sample Data"));
-        String chunkstring = JsonHandler.convertObjectToString(chunksMetadataServerRequest);
-        objectOutputStream.writeObject(chunkstring);
-        outputStream.close();
-        socket.close();
+        return socket;
+    }
+
+    /**
+     * This function starts sending heartbeats to master server
+     */
+    public static void startHeartbeatForMaster() throws IOException{
+        Socket socket = establishConnectionWithMaster("127.0.0.1", 8018);
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
+            sendHearbeatToMaster(objectOutputStream);
+        } catch (Exception e){
+            log.error("Error:", e);
+            socket.close();
+        }
     }
 }

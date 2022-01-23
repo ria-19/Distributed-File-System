@@ -20,17 +20,21 @@ public class ChunkServerImpl implements CommandLineRunner {
         serverSocket = new ServerSocket(8019);
     }
 
+    /**
+     * It initiates the heartbeat function and creates a server socket for clients and
+     * listens on that
+     */
     @Override
     public void run(String... args) throws Exception {
         log.info("Server started");
-        try {
-            while (true) {
+        HeartbeatServiceImpl.startHeartbeatForMaster();
+        while (true) {
+            try {
                 Socket socket = serverSocket.accept();
                 // TODO : Handle incoming data requests from clients
+            } catch (Exception e) {
+                log.error("Error:", e);
             }
-        } catch (Exception e) {
-            log.error("Error :{}", e);
-            serverSocket.close();
         }
     }
 }

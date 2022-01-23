@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChunksMetadata {
+public class ClientChunksMetadata {
    private String chunkHandle;
    private String data;
 }
