@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+
 /**
  * created by nikunjagarwal on 21-01-2022
  */
@@ -12,5 +14,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChunkServerRequest extends ServerRequest{
     private boolean containsChunksMetadata;
-    private ClientChunksMetadata clientChunksMetadata;
+    private ArrayList<ChunkServerChunkMetadata> clientChunksMetadata;
 }
