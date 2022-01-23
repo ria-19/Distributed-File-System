@@ -1,6 +1,6 @@
 package com.gfs.master.service;
 
-import com.gfs.master.model.ChunkServerRequest;
+import com.gfs.master.model.request.ChunkServerRequest;
 import com.gfs.master.utils.JsonHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,7 +28,7 @@ public class HandleChunkServerRequestTask implements Runnable{
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
             while(true){
                 String chunkServerRequestString = (String)objectInputStream.readObject();
-                log.info("Request from {} : {}", remoteSocketAddress, chunkServerRequestString);
+                log.info("Heartbeat Request from Chunkserver {} : {}", remoteSocketAddress, chunkServerRequestString);
                 ChunkServerRequest chunkServerRequest = JsonHandler.convertStringToObject(chunkServerRequestString, ChunkServerRequest.class);
                 HeartbeatServiceImpl.updateHeartBeatOfServer(remoteSocketAddress,chunkServerRequest);
             }

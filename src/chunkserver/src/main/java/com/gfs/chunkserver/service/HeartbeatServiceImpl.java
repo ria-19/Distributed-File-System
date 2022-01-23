@@ -33,9 +33,9 @@ public class HeartbeatServiceImpl {
         while(true) {
             log.info("Sending heartbeat to master server");
             ChunkServerRequest chunkServerRequest = new ChunkServerRequest();
-            if(heartBeatCounter == 6) {
+            if(heartBeatCounter == 3) {
                 chunkServerRequest.setContainsChunksMetadata(true);
-                chunkServerRequest.setChunkServerChunkMetadataList(chunkServerRequest.getChunkServerChunkMetadataList());
+                chunkServerRequest.setChunkServerChunkMetadataList(fetchChunkServerMetadata());
                 heartBeatCounter = 0;
             } else {
                 chunkServerRequest.setContainsChunksMetadata(false);
@@ -74,11 +74,11 @@ public class HeartbeatServiceImpl {
         }
     }
 
-    private ArrayList<ChunkServerChunkMetadata> fetchChunkServerMetadata() {
+    private static ArrayList<ChunkServerChunkMetadata> fetchChunkServerMetadata() {
         ArrayList<ChunkServerChunkMetadata> chunkMetadataList = new ArrayList<>();
         //TODO: Fetch actual metadata instead of mock chunkmetadata
         ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
-        chunkMetadata.setChunkHandle(12345);
+        chunkMetadata.setChunkHandle("12345");
         Location location = new Location("/mock-path",2);
         chunkMetadata.setLocation(location);
         chunkMetadataList.add(chunkMetadata);

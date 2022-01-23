@@ -1,5 +1,6 @@
-package com.gfs.master.model;
+package com.gfs.master.model.response;
 
+import com.gfs.master.model.ChunkMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

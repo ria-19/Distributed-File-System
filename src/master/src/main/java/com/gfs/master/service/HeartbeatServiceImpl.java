@@ -1,20 +1,15 @@
 package com.gfs.master.service;
 
 import com.gfs.master.Constants;
-import com.gfs.master.model.ChunkServerChunkMetadata;
-import com.gfs.master.model.ChunkServerRequest;
+import com.gfs.master.model.request.ChunkServerChunkMetadata;
+import com.gfs.master.model.request.ChunkServerRequest;
 import com.gfs.master.model.Location;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
+import java.util.*;
 
 /**
  * created by nikunjagarwal on 16-01-2022
@@ -36,6 +31,7 @@ public class HeartbeatServiceImpl {
     @Scheduled(fixedDelay = Constants.heartBeatCheckTimeInterval)
     public static void checkLiveChunkServers() {
         log.info("Checking Live ChunkServers");
+        log.info("uuid={}", UUID.randomUUID());
         long currentTimeInMillis = new Date().getTime();
         for(Map.Entry lastHeartBeatTime: lastHeartBeatTimeOfServers.entrySet()) {
             String serverUrl = (String) lastHeartBeatTime.getKey();
@@ -44,7 +40,6 @@ public class HeartbeatServiceImpl {
             if(diffInMilliSeconds >= Constants.serverTimeoutTime) {
                 log.info("Server {} removed : ", serverUrl);
                 lastHeartBeatTimeOfServers.remove(serverUrl);
-            } else{
                 //TODO : Update chunks metadata and remove this chunkserver
             }
         }

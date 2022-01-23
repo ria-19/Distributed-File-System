@@ -1,4 +1,4 @@
-package com.gfs.master.model;
+package com.gfs.master.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChunkServerRequest extends ServerRequest{
+public class ChunkServerRequest extends ServerRequest {
     private boolean containsChunksMetadata;
     private ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList;
 }

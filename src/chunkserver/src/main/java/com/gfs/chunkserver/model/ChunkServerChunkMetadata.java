@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChunkServerChunkMetadata {
-   private int chunkHandle;
+   private String chunkHandle;
    private Location location;
 }

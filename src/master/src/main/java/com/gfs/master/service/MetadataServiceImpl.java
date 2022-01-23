@@ -1,25 +1,30 @@
 package com.gfs.master.service;
 
 import com.gfs.master.model.*;
-import lombok.Data;
+import com.gfs.master.model.request.ChunkServerChunkMetadata;
+import com.gfs.master.model.response.ChunkMetadataResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * created by nikunjagarwal on 21-01-2022
  * This service maintains an in memory metadata and all tasks related to it
  */
+@Slf4j
 @Component
 public class MetadataServiceImpl {
     private static MetadataServiceImpl instance;
     private HashMap<String, File> fileMap; // <filename,File>
-    private HashMap<Integer, ChunkMetadata> chunkMap; // <chunkhandle, ChunkMetadata>
+    private HashMap<String, ChunkMetadata> chunkMap; // <chunkhandle, ChunkMetadata>
 
     private MetadataServiceImpl(){
         this.fileMap = new HashMap<>();
         this.chunkMap = new HashMap<>();
+        setMockDataDuringIntitalization(); // TODO : to be removed later
     }
 
     /**
@@ -41,13 +46,15 @@ public class MetadataServiceImpl {
      * @return ChunkMetaadataResponse: chunkmetadata for the given file and offset
      */
     public ChunkMetadataResponse getChunkMetadataMetadata(String filename, Integer offset) {
-        Integer chunkHandle = getChunkHandle(filename, offset);
+        log.info("Inside getChunkMetadataMetadata() with filename={}, offset={}", filename, offset);
+        String chunkHandle = getChunkHandle(filename, offset);
         if(chunkHandle == null) {
             return null;
         }
-        ChunkMetadataResponse chunkMetaadataResponse = new ChunkMetadataResponse();
-        chunkMetaadataResponse.builder().filename(filename).offset(offset).chunkMetadata(this.chunkMap.get(chunkHandle)).build();
-        return chunkMetaadataResponse;
+        ChunkMetadataResponse chunkMetadataResponse = new ChunkMetadataResponse();
+        chunkMetadataResponse.builder().filename(filename).offset(offset).chunkMetadata(this.chunkMap.get(chunkHandle)).build();
+        log.info("Fetched chunk metadata={}", chunkMetadataResponse);
+        return chunkMetadataResponse;
     }
 
     /**
@@ -55,9 +62,13 @@ public class MetadataServiceImpl {
      * @param chunkServerChunkMetadataList: request containing metadata received from chunk servers
      */
     public synchronized void updateChunkMetadata(ArrayList<ChunkServerChunkMetadata>  chunkServerChunkMetadataList) {
+        log.info("Inside updateChunkMetadata() with chunkServerChunkMetadata={}", chunkServerChunkMetadataList);
         for(ChunkServerChunkMetadata chunkServerChunkMetadata : chunkServerChunkMetadataList) {
-            Integer chunkHandle = chunkServerChunkMetadata.getChunkHandle();
+            String chunkHandle = chunkServerChunkMetadata.getChunkHandle();
             ChunkMetadata chunkMetadata = this.chunkMap.get(chunkHandle);
+            if(chunkMetadata == null){
+                log.error("Chunk not found for chunk handle : {}", chunkHandle);
+            }
             HashMap<String, Location> chunklocationMap  = chunkMetadata.getLocations();
             if(chunklocationMap == null){
                 chunklocationMap = new HashMap<>();
@@ -66,6 +77,8 @@ public class MetadataServiceImpl {
             chunkMetadata.setLocations(chunklocationMap);
             this.chunkMap.put(chunkHandle, chunkMetadata);
         }
+        log.info("Filemap after update:{}", fileMap);
+        log.info("Chunkmap after update: {}", chunkMap);
     }
 
     /**
@@ -74,12 +87,11 @@ public class MetadataServiceImpl {
      * @param offset: offset of the file
      * @return integer: chunk handle for the given filename offset
      */
-    private Integer getChunkHandle(String filename, Integer offset) {
+    private String getChunkHandle(String filename, Integer offset) {
         File file = this.fileMap.get(filename);
         if(file == null)
             return null;
-        Integer chunkHandle = file.getOffsetChunkHandleMap().get(offset);
-        return chunkHandle;
+        return file.getOffsetChunkHandleMap().get(offset);
     }
 
     /**
@@ -91,13 +103,13 @@ public class MetadataServiceImpl {
     public ArrayList<ChunkMetadataResponse> updateNewFileMetadata(String filename, ArrayList<Integer> offsets) {
         // TODO : to be revisited while implementing write mechanism
         File file = new File(filename, new HashMap<>());
-        HashMap<Integer, Integer> offsetChunkHandles = new HashMap<>();
+        HashMap<Integer, String> offsetChunkHandles = new HashMap<>();
         ArrayList<ChunkMetadataResponse> chunkMetadataResponseList = new ArrayList<>();
         for(Integer offset : offsets) {
-            Integer chunkHandle = generateNewChunkHandle(filename, offset);
+            String chunkHandle = generateNewChunkHandle();
             offsetChunkHandles.put(offset, chunkHandle);
             ChunkMetadata chunkMetadata = new ChunkMetadata();
-            chunkMetadata.builder().chunkHandle(chunkHandle);
+            chunkMetadata.setChunkHandle(chunkHandle);
             ChunkMetadataResponse chunkMetadataResponse = new ChunkMetadataResponse(filename, offset, chunkMetadata);
             chunkMetadataResponseList.add(chunkMetadataResponse);
         }
@@ -106,13 +118,19 @@ public class MetadataServiceImpl {
 
     /**
      * generate new unique chunk handle from the given filename, offset
-     * @param filename:
-     * @param offset:
      * @return Integer: newly created chunkhandle
      */
-    private Integer generateNewChunkHandle(String filename, Integer offset) {
-        // TODO : to implement generation of chunkHandle from filename and offset
-        return 1;
+    private String generateNewChunkHandle() {
+        return UUID.randomUUID().toString();
+    }
+
+    //TODO: to be removed later
+    private void setMockDataDuringIntitalization(){
+        HashMap<Integer, String > offsetMap =  new HashMap<>();
+        offsetMap.put(1, "12345");
+        File file = new File("mock-file-1", offsetMap);
+        fileMap.put("mock-file-1", file);
+        chunkMap.put("12345",new ChunkMetadata("12345", new HashMap<>(), ""));
     }
 
 }

@@ -1,6 +1,7 @@
-package com.gfs.master.model;
+package com.gfs.master.model.request;
 
 
+import com.gfs.master.model.Location;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChunkServerChunkMetadata {
-    private int chunkHandle;
+    private String chunkHandle;
     private Location location;
 }

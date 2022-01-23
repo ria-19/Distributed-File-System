@@ -15,7 +15,7 @@ import java.util.HashMap;
 @NoArgsConstructor
 @Builder
 public class ChunkMetadata {
-    private int chunkHandle;
+    private String chunkHandle;
     // ChunkserverUrl, Location
     private HashMap<String, Location> locations;
     private String leaseServer;

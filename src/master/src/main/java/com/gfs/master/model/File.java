@@ -17,5 +17,5 @@ import java.util.HashMap;
 public class File {
     private String filename;
     // <offset, chunkhandle>
-    HashMap<Integer, Integer> offsetChunkHandleMap;
+    HashMap<Integer, String> offsetChunkHandleMap;
 }

@@ -17,7 +17,7 @@ public class ChunkServerImpl implements CommandLineRunner {
     ServerSocket serverSocket;
 
     public ChunkServerImpl() throws Exception{
-        serverSocket = new ServerSocket(8019);
+//        serverSocket = new ServerSocket(8020);
     }
 
     /**
@@ -30,7 +30,7 @@ public class ChunkServerImpl implements CommandLineRunner {
         HeartbeatServiceImpl.startHeartbeatForMaster();
         while (true) {
             try {
-                Socket socket = serverSocket.accept();
+//                Socket socket = serverSocket.accept();
                 // TODO : Handle incoming data requests from clients
             } catch (Exception e) {
                 log.error("Error:", e);
