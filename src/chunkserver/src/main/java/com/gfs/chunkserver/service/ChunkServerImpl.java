@@ -19,11 +19,11 @@ public class ChunkServerImpl implements CommandLineRunner {
 
     ServerSocket serverSocket;
 
-    @Value("${readThreads}")
+    @Value("${numFileHandlingThreads}")
     private int numFileHandlingThreads;
 
     public ChunkServerImpl() throws Exception{
-//        serverSocket = new ServerSocket(8020);
+        serverSocket = new ServerSocket(8020);
     }
 
     /**
@@ -40,7 +40,6 @@ public class ChunkServerImpl implements CommandLineRunner {
                 Socket socket = serverSocket.accept();
                 log.info("Started Connection with Remote Socket Address : " + socket.getRemoteSocketAddress());
                 executorService.execute(new HandleClientRequestTask(socket));
-                socket.close();
              } catch (Exception e) {
                 log.error("Error:", e);
             }
