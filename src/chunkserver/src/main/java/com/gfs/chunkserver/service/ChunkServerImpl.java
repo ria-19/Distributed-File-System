@@ -1,12 +1,10 @@
 package com.gfs.chunkserver.service;
 
-import com.gfs.chunkserver.model.RequestType;
-import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +19,9 @@ public class ChunkServerImpl implements CommandLineRunner {
 
     ServerSocket serverSocket;
 
+    @Value("${readThreads}")
+    private int numFileHandlingThreads;
+
     public ChunkServerImpl() throws Exception{
 //        serverSocket = new ServerSocket(8020);
     }
@@ -32,28 +33,15 @@ public class ChunkServerImpl implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("Server started");
-        ExecutorService executorServiceForReads = Executors.newFixedThreadPool(4);
-        ExecutorService executorServiceForWrites = Executors.newFixedThreadPool(1);
+        ExecutorService executorService= Executors.newFixedThreadPool(numFileHandlingThreads);
         HeartbeatServiceImpl.startHeartbeatForMaster();
         while (true) {
             try {
                 Socket socket = serverSocket.accept();
                 log.info("Started Connection with Remote Socket Address : " + socket.getRemoteSocketAddress());
-                ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-
-                String request = (String)objectInputStream.readObject();
-                RequestType requestType = JsonHandler.convertStringToObject(request, RequestType.class);
-
-                switch (requestType) {
-                    case READ:
-                        executorServiceForReads.execute(new HandleReadRequestTask(socket, objectInputStream));
-                        break;
-                    case WRITE:
-                        executorServiceForWrites.execute(new HandleWriteRequestTask(socket, objectInputStream));
-                }
-
-                // TODO : Handle incoming data requests from clients
-            } catch (Exception e) {
+                executorService.execute(new HandleClientRequestTask(socket));
+                socket.close();
+             } catch (Exception e) {
                 log.error("Error:", e);
             }
         }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReadRequest {
+public class ClientReadRequest {
 
     private String chunkHandle;
 }
