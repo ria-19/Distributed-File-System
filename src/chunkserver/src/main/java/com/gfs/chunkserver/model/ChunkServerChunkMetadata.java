@@ -1,4 +1,4 @@
-package com.gfs.master.model;
+package com.gfs.chunkserver.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientChunksMetadata extends ServerRequest{
-    private String chunkHandle;
-    private String data;
+public class ChunkServerChunkMetadata {
+   private String chunkHandle;
+   private Location location;
 }

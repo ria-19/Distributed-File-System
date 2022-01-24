@@ -1,4 +1,4 @@
-package com.gfs.master.model;
+package com.gfs.master.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
