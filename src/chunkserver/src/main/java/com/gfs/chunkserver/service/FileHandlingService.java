@@ -25,7 +25,7 @@ public class FileHandlingService {
      * @param filepath Path of the file to read from
      * @throws IOException
      */
-    public static void readFile(Socket socket, String filepath) throws IOException{
+    public static String readFile(Socket socket, String filepath) throws IOException{
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
         Stream<String> stream = Files.lines(Paths.get(filepath));
         stream.forEach(obj -> {
@@ -43,6 +43,7 @@ public class FileHandlingService {
                 }
             }
         });
+        return null;
     }
 
     /**
@@ -54,7 +55,8 @@ public class FileHandlingService {
      */
     public static void writeFile(Socket socket, String filepath, String data) {
 //        Opening the file in append mode
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filepath, true)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream())) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filepath, true));
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream())) {
             bufferedWriter.write(data);
 
 //            Writing 'true' to the outputStream to show command completion
@@ -63,5 +65,13 @@ public class FileHandlingService {
         } catch (IOException e) {
             log.error("IOException in FileHandlingService :: writeFile", e);
         }
+    }
+
+    public static String readFile(String filepath){
+        return null;
+    }
+
+    public static void writeFile(String filepath, String data){
+
     }
 }
