@@ -19,12 +19,17 @@ import java.util.concurrent.Executors;
 public class ChunkServerImpl implements CommandLineRunner {
 
     ServerSocket serverSocket;
-
+    @Value("${chunkServerPort}")
+    private int chunkServerPort;
+    @Value("${masterServerHost}")
+    private String masterServerHost;
+    @Value("${masterServerPort}")
+    private int masterServerPort;
     @Value("${numFileHandlingThreads}")
     private int numFileHandlingThreads;
 
     public ChunkServerImpl() throws Exception{
-        serverSocket = new ServerSocket(8020);
+        serverSocket = new ServerSocket(chunkServerPort);
     }
 
     /**
@@ -35,22 +40,13 @@ public class ChunkServerImpl implements CommandLineRunner {
     public void run(String... args) {
         log.info("Server started");
         ExecutorService executorService= Executors.newFixedThreadPool(numFileHandlingThreads);
-        ExecutorService heartbeatExecutorService = Executors.newFixedThreadPool(1);
-        heartbeatExecutorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HeartbeatServiceImpl.startHeartbeatForMaster();
-                } catch (IOException e) {
-                    log.error("IOException in ChunkServerImpl", e);
-                }
-            }
-        });
+        ExecutorService heartbeatExecutorService = Executors.newSingleThreadExecutor();
+        heartbeatExecutorService.execute(() -> HeartbeatServiceImpl.startHeartbeatForMaster(masterServerHost, masterServerPort));
         while (true) {
             try {
                 Socket socket = serverSocket.accept();
                 log.info("Started Connection with Remote Socket Address : " + socket.getRemoteSocketAddress());
-                executorService.execute(new HandleClientRequestTask(socket));
+                executorService.execute(new HandleRequestTask(socket));
              } catch (Exception e) {
                 log.error("Error:", e);
             }

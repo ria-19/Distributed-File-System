@@ -6,7 +6,6 @@ import com.gfs.chunkserver.model.Location;
 import com.gfs.chunkserver.model.Source;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,7 +18,6 @@ import java.util.ArrayList;
  * created by nikunjagarwal on 17-01-2022
  */
 @Component
-@EnableScheduling
 @Slf4j
 public class HeartbeatServiceImpl {
 
@@ -63,10 +61,10 @@ public class HeartbeatServiceImpl {
     /**
      * This function starts sending heartbeats to master server
      */
-    public static void startHeartbeatForMaster() throws IOException{
+    public static void startHeartbeatForMaster(String host, int port) {
         //TODO: enable retry mechanism
         try {
-            Socket socket = establishConnectionWithMaster("127.0.0.1", 8018);
+            Socket socket = establishConnectionWithMaster(host, port);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
             sendHearbeatToMaster(objectOutputStream);
