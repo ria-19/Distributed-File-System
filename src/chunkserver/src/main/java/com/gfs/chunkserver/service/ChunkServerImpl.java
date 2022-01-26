@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -31,10 +32,20 @@ public class ChunkServerImpl implements CommandLineRunner {
      * listens on that
      */
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         log.info("Server started");
         ExecutorService executorService= Executors.newFixedThreadPool(numFileHandlingThreads);
-        HeartbeatServiceImpl.startHeartbeatForMaster();
+        ExecutorService heartbeatExecutorService = Executors.newFixedThreadPool(1);
+        heartbeatExecutorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    HeartbeatServiceImpl.startHeartbeatForMaster();
+                } catch (IOException e) {
+                    log.error("IOException in ChunkServerImpl", e);
+                }
+            }
+        });
         while (true) {
             try {
                 Socket socket = serverSocket.accept();

@@ -55,6 +55,7 @@ public class HandleClientRequestTask implements Runnable {
     public void readFile(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
         try{
             String clientRequestString = (String) objectInputStream.readObject();
+            log.info("Filename to read from : {}" ,clientRequestString);
             ClientReadRequest clientReadRequest = JsonHandler.convertStringToObject(clientRequestString, ClientReadRequest.class);
             String filedata = FileHandlingService.readFile(clientReadRequest.getChunkHandle());
             objectOutputStream.writeObject(filedata);

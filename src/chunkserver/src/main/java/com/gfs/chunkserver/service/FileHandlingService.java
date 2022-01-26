@@ -2,14 +2,12 @@ package com.gfs.chunkserver.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,8 +25,11 @@ public class FileHandlingService {
      * @param filepath Path of the file to read from
      * @throws IOException
      */
+    private final static String basePath = "./src/chunkserver/x";
+
     public static String readFile(String filepath) throws IOException {
-        Stream<String> lines = Files.lines(Paths.get(filepath));
+        log.info("Reading from file : {} ", Paths.get(basePath, filepath).toString());
+        Stream<String> lines = Files.lines(Paths.get(basePath, filepath));
         return lines.collect(Collectors.joining("\n"));
     }
 
@@ -39,7 +40,7 @@ public class FileHandlingService {
      * @param data {@link String} data to append to file
      */
     public static void writeFile(String filepath, String data) {
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filepath, true))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Paths.get(basePath, filepath).toString(), true))) {
             bufferedWriter.write(data);
         } catch (IOException e) {
             log.error("IOException in FileHandlingService :: writeFile", e);

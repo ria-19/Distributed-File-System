@@ -71,7 +71,7 @@ public class HeartbeatServiceImpl {
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
             sendHearbeatToMaster(objectOutputStream);
             socket.close();
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("Error:", e);
         }
     }
