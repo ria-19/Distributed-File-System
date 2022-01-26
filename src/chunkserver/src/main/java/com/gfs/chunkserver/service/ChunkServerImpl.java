@@ -23,8 +23,9 @@ public class ChunkServerImpl implements CommandLineRunner {
     @Value("${numFileHandlingThreads}")
     private int numFileHandlingThreads;
 
-    public ChunkServerImpl() throws Exception{
-        serverSocket = new ServerSocket(8020);
+
+    public ChunkServerImpl(@Value("${chunkserver.port}") int port) throws Exception{
+        serverSocket = new ServerSocket(port);
     }
 
     /**
