@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -53,7 +54,7 @@ public class HeartbeatServiceImpl {
      * @param port : master server port
      * @return Socket: socket connected with master server
      */
-    private static Socket establishConnectionWithMaster(String host, int port) throws IOException {
+    private static Socket establishConnectionWithMaster(String host, int port) throws IOException, SocketException {
         Socket socket = new Socket(host, port);
         log.info("Connected to server : {}", socket);
         return socket;
@@ -63,14 +64,15 @@ public class HeartbeatServiceImpl {
      * This function starts sending heartbeats to master server
      */
     public static void startHeartbeatForMaster() throws IOException{
-        Socket socket = establishConnectionWithMaster("127.0.0.1", 8018);
+        //TODO: enable retry mechanism
         try {
+            Socket socket = establishConnectionWithMaster("127.0.0.1", 8018);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
             sendHearbeatToMaster(objectOutputStream);
-        } catch (Exception e){
-            log.error("Error:", e);
             socket.close();
+        } catch (Exception e) {
+            log.error("Error:", e);
         }
     }
 
