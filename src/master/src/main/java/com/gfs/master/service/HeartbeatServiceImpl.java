@@ -69,7 +69,7 @@ public class HeartbeatServiceImpl {
     private static ArrayList<ChunkServerChunkMetadata> addChunkServerDetails(String remoteSocket, ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList){
         log.info("Inside addChunkServerDetails()");
         ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = new ArrayList<>();
-        for(ChunkServerChunkMetadata chunkServerChunkMetadata: chunkServerChunkMetadataList) {
+        for(ChunkServerChunkMetadata chunkServerChunkMetadata: chunkServerChunkMetadataList){
             Location location = chunkServerChunkMetadata.getLocation();
             location.setChunkserverUrl(remoteSocket);
             location.setLastUpdated(new Date());

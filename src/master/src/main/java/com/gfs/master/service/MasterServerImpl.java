@@ -51,7 +51,7 @@ public class MasterServerImpl implements CommandLineRunner {
                             executorServiceForChunkServer.execute(new HandleChunkServerRequestTask(socket, objectInputStream));
                             break;
                         case CLIENT:
-                            executorServiceForClients.execute(new HandleClientRequestTask(socket));
+                            executorServiceForClients.execute(new HandleClientRequestTask(socket, objectInputStream));
                             break;
                         default:
                             log.error("Incorrect source");
