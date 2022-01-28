@@ -3,6 +3,7 @@ package com.gfs.master.service;
 import com.gfs.master.model.Source;
 import com.gfs.master.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +24,10 @@ public class MasterServerImpl implements CommandLineRunner {
 
     ServerSocket serverSocket;
 
+    @Value("${masterServerPort}")
+    private int masterServerPort;
     public MasterServerImpl() throws IOException {
-        serverSocket = new ServerSocket(8018);
+        serverSocket = new ServerSocket(masterServerPort);
     }
 
     /**

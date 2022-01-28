@@ -1,5 +1,6 @@
-package com.gfs.chunkserver.model;
+package com.gfs.chunkserver.model.request;
 
+import com.gfs.chunkserver.model.ChunkServerChunkMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,5 +1,7 @@
 package com.gfs.chunkserver.service;
 
+import com.gfs.chunkserver.model.ChunkCacheData;
+
 import java.util.HashMap;
 
 /**
@@ -7,7 +9,7 @@ import java.util.HashMap;
  */
 public class ChunkCacheService {
     private static ChunkCacheService instance;
-    private HashMap<String, String> chunkCache; // <chunkhandle,chunkData>
+    private HashMap<String, ChunkCacheData> chunkCache; // <chunkhandle,chunkData>
 
     private ChunkCacheService(){
         chunkCache = new HashMap<>();
@@ -24,11 +26,15 @@ public class ChunkCacheService {
         return instance;
     }
 
-    public synchronized void insertIntoChunkCache(String chunkHandle, String chunkData){
-        chunkCache.put(chunkHandle,chunkData);
+    public synchronized void insertIntoChunkCache(String chunkHandle, ChunkCacheData chunkCacheData){
+        chunkCache.put(chunkHandle,chunkCacheData);
     }
 
-    public String getChunkDataFromCache(String chunkHandle) {
+    public ChunkCacheData getChunkDataFromCache(String chunkHandle) {
         return chunkCache.get(chunkHandle);
+    }
+
+    public synchronized void deleteFromChunkCache(String chunkHandle){
+        chunkCache.remove(chunkHandle);
     }
 }

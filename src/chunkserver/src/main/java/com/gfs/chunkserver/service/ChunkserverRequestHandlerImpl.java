@@ -1,7 +1,10 @@
 package com.gfs.chunkserver.service;
 
-import com.gfs.chunkserver.model.ClientWriteRequest;
+import com.gfs.chunkserver.model.ChunkCacheData;
 import com.gfs.chunkserver.model.RequestType;
+import com.gfs.chunkserver.model.request.ChunkserverChunkserverFinalWriteRequest;
+import com.gfs.chunkserver.model.response.Response;
+import com.gfs.chunkserver.model.response.ResponseStatus;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,16 +21,15 @@ import java.net.Socket;
 @Service
 public class ChunkserverRequestHandlerImpl {
 
-    public void handleClientRequest(Socket socket, ObjectInputStream objectInputStream) {
+    public void handleChunkserverRequest(Socket socket, ObjectInputStream objectInputStream) {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             String request = (String) objectInputStream.readObject();
             log.info("Client Request of Type : {} from {}", request, remoteSocketAddress);
             RequestType requestType = JsonHandler.convertStringToObject(request, RequestType.class);
-
             switch (requestType) {
-                case WRITE:
+                case WRITETOFILEFROMCACHE:
                     writeFile(objectOutputStream, objectInputStream);
                     break;
                 default:
@@ -41,12 +43,21 @@ public class ChunkserverRequestHandlerImpl {
 
     public void writeFile(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
         try{
-            String clientRequestString = (String) objectInputStream.readObject();
-            ClientWriteRequest clientWriteRequest = JsonHandler.convertStringToObject(clientRequestString, ClientWriteRequest.class);
-            FileHandlingService.writeFile(clientWriteRequest.getChunkHandle(), clientWriteRequest.getData());
-            objectOutputStream.writeObject("Success");
+            String chunkserverRequestString = (String) objectInputStream.readObject();
+            ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = JsonHandler.convertStringToObject(chunkserverRequestString, ChunkserverChunkserverFinalWriteRequest.class);
+            writeToOwnCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
+            Response response = new Response(ResponseStatus.SUCCESS, null);
+            objectOutputStream.writeObject(JsonHandler.convertObjectToString(response));
         } catch (IOException | ClassNotFoundException e) {
             log.error("Error in HandleClientRequestTask:", e);
         }
+    }
+
+    private void writeToOwnCache(String chunkHandle) {
+        ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
+        ChunkCacheData chunkCacheData = chunkCacheService.getChunkDataFromCache(chunkHandle);
+        FileHandlingService.writeFile(chunkCacheData.getChunkPath(), chunkCacheData.getData());
+        // update metadata
+        chunkCacheService.deleteFromChunkCache(chunkHandle);
     }
 }

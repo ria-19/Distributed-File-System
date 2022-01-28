@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Location {
+    private String chunkserverUrl;
     private String chunkPath;
     private int versionNo;
 }

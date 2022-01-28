@@ -1,6 +1,6 @@
 package com.gfs.chunkserver.service;
 
-import com.gfs.chunkserver.model.ChunkServerRequest;
+import com.gfs.chunkserver.model.request.ChunkServerRequest;
 import com.gfs.chunkserver.model.ChunkServerChunkMetadata;
 import com.gfs.chunkserver.model.Location;
 import com.gfs.chunkserver.model.Source;
@@ -79,7 +79,7 @@ public class HeartbeatServiceImpl {
         //TODO: Fetch actual metadata instead of mock chunkmetadata
         ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
         chunkMetadata.setChunkHandle("12345");
-        Location location = new Location("/mock-path",2);
+        Location location = new Location("hosturl","/mock-path",2);
         chunkMetadata.setLocation(location);
         chunkMetadataList.add(chunkMetadata);
         return  chunkMetadataList;

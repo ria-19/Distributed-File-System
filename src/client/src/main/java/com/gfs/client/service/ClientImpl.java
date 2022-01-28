@@ -1,7 +1,5 @@
 package com.gfs.client.service;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.gfs.client.model.*;
 import com.gfs.client.utils.JsonHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +13,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 @Component
 @Slf4j
@@ -31,7 +28,9 @@ public class ClientImpl implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
+
          //TODO : Make requests to the master then to chunkserver based on REST APIs
+
     }
 
     private void fetchChunkDataFromChunkServer(String chunkHandle, Location location){
@@ -41,7 +40,8 @@ public class ClientImpl implements CommandLineRunner {
             Socket socket = new Socket(chunkServerHost, chunkServerPort);
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, Source.CLIENT, RequestType.READCHUNK, chunkHandle);
+            ClientChunkserverReadRequest clientChunkserverReadRequest = new ClientChunkserverReadRequest(chunkHandle);
+            Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, RequestType.READCHUNK, clientChunkserverReadRequest);
             socket.close();
             log.info("Response={}", response);
         } catch (Exception e) {
@@ -60,27 +60,26 @@ public class ClientImpl implements CommandLineRunner {
                 Socket socket = new Socket(chunkServerHost, chunkServerPort);
                 ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, Source.CLIENT, RequestType.WRITETOCACHE, clientChunkserverWriteRequest);
+                clientChunkserverWriteRequest.setChunkPath(location.getChunkPath());
+                Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, RequestType.WRITETOCACHE, clientChunkserverWriteRequest);
                 if(response.getResponseStatus() == ResponseStatus.SUCCESS)
                     noOfSuccessfulSends++;
                 socket.close();
             } catch (Exception e){
-                log.error("Error:{}", e);
+                log.error("Error : {}", e);
             }
         }
-        if(noOfSuccessfulSends == chunkServerLocations.size())
-            return true;
-        return false;
+        return noOfSuccessfulSends == chunkServerLocations.size();
     }
 
-    private void sendAckToPrimaryToWriteData(String chunkHandle, String primaryChunkserverSocketString){
+    private void sendAckToPrimaryToWriteData(ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest, String primaryChunkserverSocketString){
         String chunkServerHost = primaryChunkserverSocketString.split(":")[0];
         int chunkServerPort = Integer.parseInt(primaryChunkserverSocketString.split(":")[1]);
         try{
             Socket socket = new Socket(chunkServerHost, chunkServerPort);
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, Source.CLIENT, RequestType.WRITETOFILEFROMCACHE, chunkHandle);
+            Response response = sendMessageInSequenceToServersAndFetchResponse(objectInputStream, objectOutputStream, RequestType.WRITETOFILEFROMCACHE, clientChunkserverWriteAckRequest);
             socket.close();
             log.info("Response={}", response);
         } catch (Exception e){
@@ -88,13 +87,12 @@ public class ClientImpl implements CommandLineRunner {
         }
     }
 
-    private Response sendMessageInSequenceToServersAndFetchResponse(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, Source source, RequestType requestType, Object data) throws IOException, ClassNotFoundException {
-        objectOutputStream.writeObject(JsonHandler.convertObjectToString(source));
+    private Response sendMessageInSequenceToServersAndFetchResponse(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, RequestType requestType, ClientRequest data) throws IOException, ClassNotFoundException {
+        objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CLIENT));
         objectOutputStream.writeObject(JsonHandler.convertObjectToString(requestType));
         objectOutputStream.writeObject(data);
         String responseString = (String) objectInputStream.readObject();
-        Response response = JsonHandler.convertStringToObject(responseString, Response.class);
-        return response;
+        return JsonHandler.convertStringToObject(responseString, Response.class);
     }
 
 }
