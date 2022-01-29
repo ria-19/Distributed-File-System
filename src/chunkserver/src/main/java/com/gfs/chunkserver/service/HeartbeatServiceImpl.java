@@ -6,12 +6,12 @@ import com.gfs.chunkserver.model.Location;
 import com.gfs.chunkserver.model.Source;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -20,6 +20,21 @@ import java.util.ArrayList;
 @Component
 @Slf4j
 public class HeartbeatServiceImpl {
+
+    private static String chunkserverHost;
+    private static int chunkserverPort;
+    private static String masterServerHost;
+    private static int masterServerPort;
+
+     HeartbeatServiceImpl(@Value("${chunkserver.host}") String chunkserverHost,
+                          @Value("${chunkserver.port}") int chunkserverPort,
+                          @Value("${masterserver.host}") String masterServerHost,
+                          @Value("${masterserver.port}") int masterServerPort){
+        HeartbeatServiceImpl.chunkserverHost = chunkserverHost;
+        HeartbeatServiceImpl.chunkserverPort = chunkserverPort;
+        HeartbeatServiceImpl.masterServerHost = masterServerHost;
+        HeartbeatServiceImpl.masterServerPort = masterServerPort;
+    }
 
     /**
      * It sends 2 types of heartbeats to Master Server at regular intervals
@@ -48,12 +63,10 @@ public class HeartbeatServiceImpl {
 
     /**
      * This method establishes connection with master
-     * @param host: master server url
-     * @param port : master server port
      * @return Socket: socket connected with master server
      */
-    private static Socket establishConnectionWithMaster(String host, int port) throws IOException, SocketException {
-        Socket socket = new Socket(host, port);
+    private static Socket establishConnectionWithMaster() throws IOException {
+        Socket socket = new Socket(masterServerHost, masterServerPort);
         log.info("Connected to server : {}", socket);
         return socket;
     }
@@ -61,10 +74,11 @@ public class HeartbeatServiceImpl {
     /**
      * This function starts sending heartbeats to master server
      */
-    public static void startHeartbeatForMaster(String host, int port) {
+    public static void startHeartbeatForMaster() {
+        log.info("Establishing connection with master for heartbeat. Master host={}, port={}", masterServerHost, masterServerPort);
         //TODO: enable retry mechanism
         try {
-            Socket socket = establishConnectionWithMaster(host, port);
+            Socket socket = establishConnectionWithMaster();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
             sendHearbeatToMaster(objectOutputStream);
@@ -79,7 +93,7 @@ public class HeartbeatServiceImpl {
         //TODO: Fetch actual metadata instead of mock chunkmetadata
         ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
         chunkMetadata.setChunkHandle("12345");
-        Location location = new Location("hosturl","/mock-path",2);
+        Location location = new Location(chunkserverHost + ":"+ chunkserverPort,"/mock-path",2);
         chunkMetadata.setLocation(location);
         chunkMetadataList.add(chunkMetadata);
         return  chunkMetadataList;

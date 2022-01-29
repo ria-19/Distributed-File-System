@@ -18,10 +18,10 @@ import java.util.ArrayList;
 @Slf4j
 public class ClientImpl implements CommandLineRunner {
 
-    @Value("${masterServerUrl}")
-    private String masterServerUrl;
+    @Value("${masterserver.host}")
+    private String masterServerHost;
 
-    @Value("${masterServerPort}")
+    @Value("${masterserver.port}")
     private int masterServerPort;
 
 
