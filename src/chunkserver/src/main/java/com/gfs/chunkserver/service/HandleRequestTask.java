@@ -11,6 +11,7 @@ import java.net.Socket;
 
 /**
  * created by nikunjagarwal on 27-01-2022
+ * This class handles request from different sources and redirects to the respective service
  */
 @Data
 @AllArgsConstructor
@@ -28,6 +29,8 @@ public class HandleRequestTask implements Runnable{
             Source source = JsonHandler.convertStringToObject(sourceString, Source.class);
             switch (source){
                 case CHUNKSERVER:
+                    ChunkserverRequestHandlerImpl chunkserverRequestHandler = new ChunkserverRequestHandlerImpl();
+                    chunkserverRequestHandler.handleChunkserverRequest(socket, objectInputStream);
                     break;
                 case CLIENT:
                     ClientRequestHandlerImpl clientRequestHandler = new ClientRequestHandlerImpl();
@@ -38,7 +41,7 @@ public class HandleRequestTask implements Runnable{
 
             }
         } catch (Exception e){
-
+            log.error("Error:{}",e);
         }
 
     }

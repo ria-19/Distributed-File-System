@@ -1,4 +1,4 @@
-package com.gfs.chunkserver.service;
+package com.gfs.chunkserver.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,16 +19,17 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileHandlingService {
 
+
+    private final static String basePath = "./src/chunkserver/x";
+
     /**
      * Utility Function to read data from a file
      *
      * @param filepath Path of the file to read from
      * @throws IOException
      */
-    private final static String basePath = "./src/chunkserver/x";
-
     public static String readFile(String filepath) throws IOException {
-        log.info("Reading from file : {} ", Paths.get(basePath, filepath).toString());
+        log.info("Reading from file : {} ", Paths.get(basePath, filepath));
         Stream<String> lines = Files.lines(Paths.get(basePath, filepath));
         return lines.collect(Collectors.joining("\n"));
     }

@@ -3,8 +3,9 @@ package com.gfs.chunkserver.service;
 import com.gfs.chunkserver.model.ChunkCacheData;
 import com.gfs.chunkserver.model.RequestType;
 import com.gfs.chunkserver.model.request.ChunkserverChunkserverFinalWriteRequest;
-import com.gfs.chunkserver.model.response.Response;
+import com.gfs.chunkserver.model.response.ChunkserverResponse;
 import com.gfs.chunkserver.model.response.ResponseStatus;
+import com.gfs.chunkserver.utils.FileHandlingService;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,11 @@ import java.net.Socket;
 @Service
 public class ChunkserverRequestHandlerImpl {
 
+    /**
+     * This method handles different types of request where source is another chunkserver
+     * @param socket: socket connected to the other chunkserver
+     * @param objectInputStream: objectOutputStream for that socket
+     */
     public void handleChunkserverRequest(Socket socket, ObjectInputStream objectInputStream) {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
@@ -41,23 +47,38 @@ public class ChunkserverRequestHandlerImpl {
         }
     }
 
+    /**
+     * This method handles Write to Cache request. It uses the chunk handle provided by another
+     * chunkserver and writes the data in a file.
+     * @param objectInputStream: objectInputStream for the connected socket
+     * @param objectOutputStream:objectOutputStream for the connected socket
+     */
     public void writeFile(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
         try{
             String chunkserverRequestString = (String) objectInputStream.readObject();
             ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = JsonHandler.convertStringToObject(chunkserverRequestString, ChunkserverChunkserverFinalWriteRequest.class);
-            writeToOwnCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
-            Response response = new Response(ResponseStatus.SUCCESS, null);
-            objectOutputStream.writeObject(JsonHandler.convertObjectToString(response));
+            ResponseStatus responseStatus = writeToOwnCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
+            ChunkserverResponse chunkserverResponse = new ChunkserverResponse(responseStatus, null);
+            objectOutputStream.writeObject(JsonHandler.convertObjectToString(chunkserverResponse));
         } catch (IOException | ClassNotFoundException e) {
             log.error("Error in HandleClientRequestTask:", e);
         }
     }
 
-    private void writeToOwnCache(String chunkHandle) {
+    /**
+     * This method fetches the chunkdata from cache service, and writes that data in a file
+     * using FileService
+     * @param chunkHandle: chunkhandle for the
+     */
+    private ResponseStatus writeToOwnCache(String chunkHandle) {
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
         ChunkCacheData chunkCacheData = chunkCacheService.getChunkDataFromCache(chunkHandle);
+        if (chunkCacheData == null) {
+            return ResponseStatus.ERROR;
+        }
         FileHandlingService.writeFile(chunkCacheData.getChunkPath(), chunkCacheData.getData());
-        // update metadata
+        // TODO : update metadata
         chunkCacheService.deleteFromChunkCache(chunkHandle);
+        return ResponseStatus.SUCCESS;
     }
 }

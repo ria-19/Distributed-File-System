@@ -7,14 +7,13 @@ import com.gfs.chunkserver.model.request.ClientChunkserverWriteAckRequest;
 import com.gfs.chunkserver.model.request.ClientChunkserverWriteRequest;
 import com.gfs.chunkserver.model.response.ChunkServerClientReadResponse;
 import com.gfs.chunkserver.model.response.ChunkserverResponse;
-import com.gfs.chunkserver.model.response.Response;
 import com.gfs.chunkserver.model.response.ResponseStatus;
+import com.gfs.chunkserver.utils.FileHandlingService;
 import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,6 +24,11 @@ import java.net.Socket;
 @Slf4j
 public class ClientRequestHandlerImpl {
 
+    /**
+     * This method handles different types of client requests and redirects it to different functions
+     * @param socket:
+     * @param objectInputStream:
+     */
     public void handleClientRequest(Socket socket, ObjectInputStream objectInputStream) {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
@@ -32,85 +36,85 @@ public class ClientRequestHandlerImpl {
             String request = (String) objectInputStream.readObject();
             log.info("Client Request of Type : {} from {}", request, remoteSocketAddress);
             RequestType requestType = JsonHandler.convertStringToObject(request, RequestType.class);
-
+            String clientRequestString = (String) objectInputStream.readObject();
+            ChunkserverResponse chunkserverResponse = new ChunkserverResponse();
             switch (requestType) {
                 case READCHUNK:
-                    readFile(objectOutputStream, objectInputStream);
+                    ClientChunkserverReadRequest clientChunkserverReadRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverReadRequest.class);
+                    chunkserverResponse = readFile(clientChunkserverReadRequest);
                     break;
                 case WRITETOCACHE:
-                    writeFileToCache(objectOutputStream, objectInputStream);
+                    ClientChunkserverWriteRequest clientChunkserverWriteRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverWriteRequest.class);
+                    chunkserverResponse = writeFileToCache(clientChunkserverWriteRequest);
+                    break;
+                case WRITETOFILEFROMCACHE:
+                    ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverWriteAckRequest.class);
+                    chunkserverResponse = writeAckToPrimary(clientChunkserverWriteAckRequest);
                     break;
                 default:
                     log.error("Wrong Request Type at HandleClientRequestTask");
                     break;
             }
+            objectOutputStream.writeObject(JsonHandler.convertObjectToString(chunkserverResponse));
         } catch (Exception e) {
             log.error("Error : {}", e);
         }
     }
 
-    public void readFile(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) {
+    /**
+     * This method handles chunk read requests. It receives a chunkhandle and then
+     * reads and returns the chunk data using file service.
+     * @param :
+     */
+    public ChunkserverResponse<ChunkServerClientReadResponse> readFile(ClientChunkserverReadRequest clientChunkserverReadRequest) {
+        ChunkserverResponse<ChunkServerClientReadResponse> chunkserverResponse = new ChunkserverResponse<>();
         try{
-            String clientRequestString = (String) objectInputStream.readObject();
-            log.info("Filename to read from : {}" ,clientRequestString);
-            ClientChunkserverReadRequest clientChunkserverReadRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverReadRequest.class);
             String filedata = FileHandlingService.readFile(clientChunkserverReadRequest.getChunkHandle());
             ChunkServerClientReadResponse chunkServerClientReadResponse = new ChunkServerClientReadResponse(filedata);
-            ChunkserverResponse<ChunkServerClientReadResponse> chunkserverResponse = new ChunkserverResponse<>();
             chunkserverResponse.setResponseStatus(ResponseStatus.SUCCESS);
             chunkserverResponse.setData(chunkServerClientReadResponse);
-            objectOutputStream.writeObject(chunkserverResponse);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             log.error("Error in HandleClientRequestTask:", e);
         }
+        return chunkserverResponse;
     }
 
-
-    private void writeFileToCache(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream){
-        try{
-            String clientRequestString = (String) objectInputStream.readObject();
-            ClientChunkserverWriteRequest clientChunkserverWriteRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverWriteRequest.class);
-            ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
-            ChunkCacheData chunkCacheData = new ChunkCacheData(clientChunkserverWriteRequest.getChunkPath(), clientChunkserverWriteRequest.getData());
-            chunkCacheService.insertIntoChunkCache(clientChunkserverWriteRequest.getChunkHandle(), chunkCacheData);
-            objectOutputStream.writeObject("Success");
-        } catch (IOException | ClassNotFoundException e) {
-            log.error("Error in HandleClientRequestTask:", e);
-        }
+    /**
+     * This method writes chunk data received from client to cache using CacheService.
+     * @param :
+     * @return :
+     */
+    private ChunkserverResponse writeFileToCache(ClientChunkserverWriteRequest clientChunkserverWriteRequest){
+        ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
+        ChunkCacheData chunkCacheData = new ChunkCacheData(clientChunkserverWriteRequest.getChunkPath(), clientChunkserverWriteRequest.getData());
+        chunkCacheService.insertIntoChunkCache(clientChunkserverWriteRequest.getChunkHandle(), chunkCacheData);
+        return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
     }
 
-    private void writeAckToPrimary(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream){
-        try{
-            String clientRequestString = (String) objectInputStream.readObject();
-            ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest = JsonHandler.convertStringToObject(clientRequestString, ClientChunkserverWriteAckRequest.class);
-            writeToOwnCache(clientChunkserverWriteAckRequest.getChunkHandle());
-            for (Location location : clientChunkserverWriteAckRequest.getLocations()) {
-                String secondaryChunkServerSocketAddress = location.getChunkserverUrl();
-                String secondaryChunkServerHost = secondaryChunkServerSocketAddress.split(":")[0];
-                int secondaryChunkServerPort = Integer.parseInt(secondaryChunkServerSocketAddress.split(":")[1]);
-                try{
-                    Socket socketForSecondaryCS = new Socket(secondaryChunkServerHost, secondaryChunkServerPort);
-                    ObjectInputStream objectInputStreamForSecondaryCS = new ObjectInputStream(socketForSecondaryCS.getInputStream());
-                    ObjectOutputStream objectOutputStreamForSecondaryCS = new ObjectOutputStream(socketForSecondaryCS.getOutputStream());
-                    ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = new ChunkserverChunkserverFinalWriteRequest(clientChunkserverWriteAckRequest.getChunkHandle());
-                    objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
-                    objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(RequestType.WRITETOFILEFROMCACHE));
-                    objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(chunkserverChunkserverFinalWriteRequest));
-                    String responseString = (String)objectInputStreamForSecondaryCS.readObject();
-                    Response response = JsonHandler.convertStringToObject(responseString, Response.class);
-                    if(!response.getResponseStatus().equals(ResponseStatus.SUCCESS)) {
-                        log.error("Write didn't happen in CS={}, reponse={}", location, response);
-                    }
-                    socketForSecondaryCS.close();
-                } catch (Exception e){
-                    log.error("Error : {}", e);
+    /**
+     * This method handles write Ack requests from clients. First, it fetches data from cache and
+     * writes in a file using chunkhandle. Then it connects to secondary servers and sends the request
+     * to write in a file.
+     * @param :
+     * @return :
+     */
+    private ChunkserverResponse writeAckToPrimary(ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest){
+        writeToOwnCache(clientChunkserverWriteAckRequest.getChunkHandle());
+        for (Location location : clientChunkserverWriteAckRequest.getLocations()) {
+            String secondaryChunkServerSocketAddress = location.getChunkserverUrl();
+            ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = new ChunkserverChunkserverFinalWriteRequest(clientChunkserverWriteAckRequest.getChunkHandle());
+            try{
+                ChunkserverResponse chunkserverResponse = sendWriteFileRequestToOtherChunkServers(secondaryChunkServerSocketAddress, chunkserverChunkserverFinalWriteRequest);
+                if(!chunkserverResponse.getResponseStatus().equals(ResponseStatus.SUCCESS)) {
+                    log.error("Write didn't happen in CS={}, reponse={}", location, chunkserverResponse);
+                    return new ChunkserverResponse(ResponseStatus.ERROR, null);
                 }
+            } catch (Exception e){
+                log.error("Error : {}", e);
+                return new ChunkserverResponse(ResponseStatus.ERROR, null);
             }
-            Response response = new Response(ResponseStatus.SUCCESS, null);
-            objectOutputStream.writeObject(JsonHandler.convertObjectToString(response));
-        } catch (IOException | ClassNotFoundException e) {
-            log.error("Error in HandleClientRequestTask:", e);
         }
+        return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
     }
 
     private void writeToOwnCache(String chunkHandle) {
@@ -119,5 +123,32 @@ public class ClientRequestHandlerImpl {
         FileHandlingService.writeFile(chunkCacheData.getChunkPath(), chunkCacheData.getData());
         // update metadata
         chunkCacheService.deleteFromChunkCache(chunkHandle);
+    }
+
+    /**
+     * This method sends Write to File requests to other chunk servers
+     * and returns the response
+     * @param :
+     * @return :
+     */
+    private ChunkserverResponse sendWriteFileRequestToOtherChunkServers(String secondaryChunkServerSocketAddress,
+                                                                        ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest) {
+        String secondaryChunkServerHost = secondaryChunkServerSocketAddress.split(":")[0];
+        int secondaryChunkServerPort = Integer.parseInt(secondaryChunkServerSocketAddress.split(":")[1]);
+        ChunkserverResponse chunkserverResponse = new ChunkserverResponse();
+        try{
+            Socket socketForSecondaryCS = new Socket(secondaryChunkServerHost, secondaryChunkServerPort);
+            ObjectInputStream objectInputStreamForSecondaryCS = new ObjectInputStream(socketForSecondaryCS.getInputStream());
+            ObjectOutputStream objectOutputStreamForSecondaryCS = new ObjectOutputStream(socketForSecondaryCS.getOutputStream());
+            objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
+            objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(RequestType.WRITETOFILEFROMCACHE));
+            objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(chunkserverChunkserverFinalWriteRequest));
+            String responseString = (String)objectInputStreamForSecondaryCS.readObject();
+            chunkserverResponse = JsonHandler.convertStringToObject(responseString, ChunkserverResponse.class);
+            socketForSecondaryCS.close();
+        } catch (Exception e) {
+            log.error("Error : {}", e);
+        }
+        return chunkserverResponse;
     }
 }
