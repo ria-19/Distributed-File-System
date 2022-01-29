@@ -86,7 +86,7 @@ public class ClientRequestHandlerImpl {
      */
     private ChunkserverResponse writeFileToCache(ClientChunkserverWriteRequest clientChunkserverWriteRequest){
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
-        ChunkCacheData chunkCacheData = new ChunkCacheData(clientChunkserverWriteRequest.getChunkPath(), clientChunkserverWriteRequest.getData());
+        ChunkCacheData chunkCacheData = new ChunkCacheData(clientChunkserverWriteRequest.getData());
         chunkCacheService.insertIntoChunkCache(clientChunkserverWriteRequest.getChunkHandle(), chunkCacheData);
         return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
     }
@@ -120,7 +120,7 @@ public class ClientRequestHandlerImpl {
     private void writeToOwnCache(String chunkHandle) {
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
         ChunkCacheData chunkCacheData = chunkCacheService.getChunkDataFromCache(chunkHandle);
-        FileHandlingService.writeFile(chunkCacheData.getChunkPath(), chunkCacheData.getData());
+        FileHandlingService.writeFile(chunkHandle, chunkCacheData.getData());
         // update metadata
         chunkCacheService.deleteFromChunkCache(chunkHandle);
     }

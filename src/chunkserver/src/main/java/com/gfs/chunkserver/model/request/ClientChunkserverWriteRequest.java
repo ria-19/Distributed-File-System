@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClientChunkserverWriteRequest {
     private String chunkHandle;
-    private String chunkPath;
     private String data;
 }

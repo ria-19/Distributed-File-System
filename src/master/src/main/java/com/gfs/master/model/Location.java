@@ -16,7 +16,6 @@ import java.util.Date;
 @Builder
 public class Location {
     private String chunkserverUrl;
-    private String chunkPath;
     private Date lastUpdated;
     private int versionNo;
 }

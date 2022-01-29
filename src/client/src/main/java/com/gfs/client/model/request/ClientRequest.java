@@ -1,4 +1,4 @@
-package com.gfs.client.model;
+package com.gfs.client.model.request;
 
 import lombok.Data;
 

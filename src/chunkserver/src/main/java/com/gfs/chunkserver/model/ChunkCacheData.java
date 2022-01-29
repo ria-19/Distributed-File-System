@@ -9,6 +9,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ChunkCacheData {
-    private String chunkPath;
     private String data;
 }

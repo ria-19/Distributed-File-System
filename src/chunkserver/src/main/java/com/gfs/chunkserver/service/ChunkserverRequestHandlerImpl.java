@@ -76,7 +76,7 @@ public class ChunkserverRequestHandlerImpl {
         if (chunkCacheData == null) {
             return ResponseStatus.ERROR;
         }
-        FileHandlingService.writeFile(chunkCacheData.getChunkPath(), chunkCacheData.getData());
+        FileHandlingService.writeFile(chunkHandle, chunkCacheData.getData());
         // TODO : update metadata
         chunkCacheService.deleteFromChunkCache(chunkHandle);
         return ResponseStatus.SUCCESS;
