@@ -99,7 +99,7 @@ public class ClientRequestHandlerImpl {
      * @return :
      */
     private ChunkserverResponse writeAckToPrimary(ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest){
-        writeToOwnCache(clientChunkserverWriteAckRequest.getChunkHandle());
+        writeToFileFromCache(clientChunkserverWriteAckRequest.getChunkHandle());
         for (Location location : clientChunkserverWriteAckRequest.getLocations()) {
             String secondaryChunkServerSocketAddress = location.getChunkserverUrl();
             ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = new ChunkserverChunkserverFinalWriteRequest(clientChunkserverWriteAckRequest.getChunkHandle());
@@ -117,7 +117,7 @@ public class ClientRequestHandlerImpl {
         return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
     }
 
-    private void writeToOwnCache(String chunkHandle) {
+    private void writeToFileFromCache(String chunkHandle) {
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
         ChunkCacheData chunkCacheData = chunkCacheService.getChunkDataFromCache(chunkHandle);
         FileHandlingService.writeFile(chunkHandle, chunkCacheData.getData());

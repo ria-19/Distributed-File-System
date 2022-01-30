@@ -21,20 +21,14 @@ import java.util.ArrayList;
 @Slf4j
 public class HeartbeatServiceImpl {
 
+    @Value("${chunkserver.host}")
     private static String chunkserverHost;
+    @Value("${chunkserver.port}")
     private static int chunkserverPort;
+    @Value("${masterserver.host}")
     private static String masterServerHost;
+    @Value("${masterserver.port}")
     private static int masterServerPort;
-
-     HeartbeatServiceImpl(@Value("${chunkserver.host}") String chunkserverHost,
-                          @Value("${chunkserver.port}") int chunkserverPort,
-                          @Value("${masterserver.host}") String masterServerHost,
-                          @Value("${masterserver.port}") int masterServerPort){
-        HeartbeatServiceImpl.chunkserverHost = chunkserverHost;
-        HeartbeatServiceImpl.chunkserverPort = chunkserverPort;
-        HeartbeatServiceImpl.masterServerHost = masterServerHost;
-        HeartbeatServiceImpl.masterServerPort = masterServerPort;
-    }
 
     /**
      * It sends 2 types of heartbeats to Master Server at regular intervals
@@ -93,7 +87,7 @@ public class HeartbeatServiceImpl {
         //TODO: Fetch actual metadata instead of mock chunkmetadata
         ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
         chunkMetadata.setChunkHandle("12345");
-        Location location = new Location(chunkserverHost + ":"+ chunkserverPort,"/mock-path",2);
+        Location location = new Location(chunkserverHost + ":"+ chunkserverPort,2);
         chunkMetadata.setLocation(location);
         chunkMetadataList.add(chunkMetadata);
         return  chunkMetadataList;

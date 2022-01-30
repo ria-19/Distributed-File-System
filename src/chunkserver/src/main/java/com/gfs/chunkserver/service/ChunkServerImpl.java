@@ -19,22 +19,15 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ChunkServerImpl implements CommandLineRunner {
 
-    ServerSocket serverSocket;
-
 
     @Value("${numFileHandlingThreads}")
     private int numFileHandlingThreads;
-    private InetAddress chunkServerHost;
+    @Value("${chunkserver.host}")
+    private String chunkServerHostString;
+    @Value("${chunkserver.port}")
     private int chunkServerPort;
+    @Value("${chunkserver.queuesize}")
     private int maximumQueueLength;
-
-    public ChunkServerImpl(@Value("${chunkserver.host}") String chunkserverHost,
-                           @Value("${chunkserver.queuesize}") int maximumQueueLength,
-                           @Value("${chunkserver.port}") int chunkserverPort) throws IOException{
-        this.chunkServerHost = InetAddress.getByName(chunkserverHost);
-        this.chunkServerPort = chunkserverPort;
-        this.maximumQueueLength = maximumQueueLength;
-    }
 
     /**
      * It initiates the heartbeat function and creates a server socket for clients and
@@ -42,7 +35,8 @@ public class ChunkServerImpl implements CommandLineRunner {
      */
     @Override
     public void run(String... args) throws IOException{
-        ServerSocket serverSocket = new ServerSocket(chunkServerPort, maximumQueueLength ,chunkServerHost);
+        InetAddress chunkserverHost = InetAddress.getByName(chunkServerHostString);
+        ServerSocket serverSocket = new ServerSocket(chunkServerPort, maximumQueueLength ,chunkserverHost);
         log.info("Server started. Chunkserver is listening at : {}", serverSocket.getLocalSocketAddress());
         ExecutorService heartbeatExecutorService = Executors.newSingleThreadExecutor();
         heartbeatExecutorService.execute(HeartbeatServiceImpl::startHeartbeatForMaster);

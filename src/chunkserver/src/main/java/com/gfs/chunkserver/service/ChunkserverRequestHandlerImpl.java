@@ -57,7 +57,7 @@ public class ChunkserverRequestHandlerImpl {
         try{
             String chunkserverRequestString = (String) objectInputStream.readObject();
             ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = JsonHandler.convertStringToObject(chunkserverRequestString, ChunkserverChunkserverFinalWriteRequest.class);
-            ResponseStatus responseStatus = writeToOwnCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
+            ResponseStatus responseStatus = writeToFileFromCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
             ChunkserverResponse chunkserverResponse = new ChunkserverResponse(responseStatus, null);
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(chunkserverResponse));
         } catch (IOException | ClassNotFoundException e) {
@@ -70,7 +70,7 @@ public class ChunkserverRequestHandlerImpl {
      * using FileService
      * @param chunkHandle: chunkhandle for the
      */
-    private ResponseStatus writeToOwnCache(String chunkHandle) {
+    private ResponseStatus writeToFileFromCache(String chunkHandle) {
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
         ChunkCacheData chunkCacheData = chunkCacheService.getChunkDataFromCache(chunkHandle);
         if (chunkCacheData == null) {
