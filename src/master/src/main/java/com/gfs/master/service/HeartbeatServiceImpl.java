@@ -54,24 +54,22 @@ public class HeartbeatServiceImpl {
         log.info("Updating heartbeat inside updateHeartBeatOfServer() from {}", remoteSocket);
         lastHeartBeatTimeOfServers.put(remoteSocket, new Date());
         if(chunkServerRequest.isContainsChunksMetadata()){
-            ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = addChunkServerDetails(remoteSocket, chunkServerRequest.getChunkServerChunkMetadataList());
+            ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = addChunkServerDetails(chunkServerRequest.getChunkServerChunkMetadataList());
             MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
             metadataService.updateChunkMetadata(updatedChunkServerChunkMetadataList);
         }
     }
 
     /**
-     * this method adds the chunkserver url, and the last updated time for chunkserver metadata
-     * @param remoteSocket: url of remote chunkserver
+     * this method adds the last updated time for chunkserver metadata
      * @param chunkServerChunkMetadataList: list containing chunk metadata
      * @return ArrayList<ChunkServerChunkMetadata>: updated list of chunk metadata
      */
-    private static ArrayList<ChunkServerChunkMetadata> addChunkServerDetails(String remoteSocket, ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList){
+    private static ArrayList<ChunkServerChunkMetadata> addChunkServerDetails(ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList){
         log.info("Inside addChunkServerDetails()");
         ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = new ArrayList<>();
         for(ChunkServerChunkMetadata chunkServerChunkMetadata: chunkServerChunkMetadataList){
             Location location = chunkServerChunkMetadata.getLocation();
-            location.setChunkserverUrl(remoteSocket);
             location.setLastUpdated(new Date());
             chunkServerChunkMetadata.setLocation(location);
             updatedChunkServerChunkMetadataList.add(chunkServerChunkMetadata);

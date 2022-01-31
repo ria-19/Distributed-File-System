@@ -2,5 +2,8 @@ package com.gfs.client.model;
 
 public enum RequestType {
     READ,
-    WRITE
+    READCHUNK,
+    WRITE,
+    WRITETOCACHE,
+    WRITETOFILEFROMCACHE
 }
