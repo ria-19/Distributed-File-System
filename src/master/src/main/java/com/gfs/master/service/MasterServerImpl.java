@@ -29,9 +29,9 @@ public class MasterServerImpl implements CommandLineRunner {
     private int chunkserversThreadPoolSize;
     @Value("${clients.threadpoolsize}")
     private int clientsThreadPoolSize;
-    private int maximumQueueLength;
-    private InetAddress masterServerHost;
-    private int masterServerPort;
+    private final int maximumQueueLength;
+    private final InetAddress masterServerHost;
+    private final int masterServerPort;
 
     public MasterServerImpl(@Value("${masterserver.host}") String masterServerHost,
                             @Value("${masterserver.queuesize}") int maximumQueueLength,

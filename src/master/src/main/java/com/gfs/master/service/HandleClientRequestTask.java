@@ -1,6 +1,7 @@
 package com.gfs.master.service;
 
 import com.fasterxml.jackson.core.JacksonException;
+import com.gfs.master.model.RequestType;
 import com.gfs.master.model.request.ClientRequest;
 import com.gfs.master.model.response.ChunkMetadataResponse;
 import com.gfs.master.utils.JsonHandler;
@@ -31,6 +32,9 @@ public class HandleClientRequestTask implements Runnable{
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(true) {
+                String clientRequestTypeString = (String)objectInputStream.readObject();
+                RequestType requestType = JsonHandler.convertStringToObject(clientRequestTypeString, RequestType.class);
+//                TODO : Incorporate the use of RequestType here
                 String clientRequestString = (String)objectInputStream.readObject();
                 log.info("Client request from {} for {}", remoteSocketAddress, clientRequestString);
                 ClientRequest clientRequest = JsonHandler.convertStringToObject(clientRequestString, ClientRequest.class);
