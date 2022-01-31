@@ -3,11 +3,15 @@ package com.gfs.master.service;
 import com.gfs.master.model.Source;
 import com.gfs.master.utils.JsonHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -21,10 +25,20 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class MasterServerImpl implements CommandLineRunner {
 
-    ServerSocket serverSocket;
+    @Value("${chunkservers.threadpoolsize}")
+    private int chunkserversThreadPoolSize;
+    @Value("${clients.threadpoolsize}")
+    private int clientsThreadPoolSize;
+    private int maximumQueueLength;
+    private InetAddress masterServerHost;
+    private int masterServerPort;
 
-    public MasterServerImpl() throws IOException {
-        serverSocket = new ServerSocket(8018);
+    public MasterServerImpl(@Value("${masterserver.host}") String masterServerHost,
+                            @Value("${masterserver.queuesize}") int maximumQueueLength,
+                            @Value("${masterserver.port}") int masterServerPort) throws IOException {
+        this.masterServerHost = InetAddress.getByName(masterServerHost);
+        this.masterServerPort = masterServerPort;
+        this.maximumQueueLength = maximumQueueLength;
     }
 
     /**
@@ -32,10 +46,11 @@ public class MasterServerImpl implements CommandLineRunner {
      * type of source, it redirects the incoming request to respective executorservice.
      */
     @Override
-    public void run(String... args) throws Exception {
-        log.info("Server started");
-        ExecutorService executorServiceForChunkServer = Executors.newFixedThreadPool(3);
-        ExecutorService executorServiceForClients = Executors.newFixedThreadPool(5);
+    public void run(String... args) throws IOException{
+        ServerSocket serverSocket = new ServerSocket(masterServerPort, maximumQueueLength, masterServerHost);
+        log.info("Started Master server at : {}", serverSocket);
+        ExecutorService executorServiceForChunkServer = Executors.newFixedThreadPool(chunkserversThreadPoolSize);
+        ExecutorService executorServiceForClients = Executors.newFixedThreadPool(clientsThreadPoolSize);
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
@@ -60,7 +75,6 @@ public class MasterServerImpl implements CommandLineRunner {
                     log.error("Error :{}", e);
                 }
             }
-
     }
 
 }

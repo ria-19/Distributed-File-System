@@ -1,4 +1,4 @@
-package com.gfs.client.model;
+package com.gfs.chunkserver.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WriteRequest {
+public class ClientChunkserverReadRequest{
     private String chunkHandle;
-    private String data;
 }
