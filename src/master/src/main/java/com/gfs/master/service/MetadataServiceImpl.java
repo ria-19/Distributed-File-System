@@ -100,7 +100,7 @@ public class MetadataServiceImpl {
      * @param offsets: list of offsets for the given file
      * @return ArrayList<ChunkMetadataResponse> : list of newly generated chunkhandles for fiename and offset
      */
-    public ArrayList<ChunkMetadataResponse> updateNewFileMetadata(String filename, ArrayList<Integer> offsets) {
+    public ArrayList<ChunkMetadataResponse> updateNewFilesMetadata(String filename, ArrayList<Integer> offsets) {
         // TODO : to be revisited while implementing write mechanism
         File file = new File(filename, new HashMap<>());
         HashMap<Integer, String> offsetChunkHandles = new HashMap<>();
@@ -114,6 +114,19 @@ public class MetadataServiceImpl {
             chunkMetadataResponseList.add(chunkMetadataResponse);
         }
         return chunkMetadataResponseList;
+    }
+
+    /**
+     * Creates metadata for a newly created file
+     * @param filename: name of the new file
+     * @param offset: a single offset for the given file
+     * @return ChunkMetadataResponse : newly generated chunkhandle for fiename and offset
+     */
+    public ChunkMetadataResponse updateNewFileMetadata(String filename, Integer offset) {
+        String chunkHandle = generateNewChunkHandle();
+        ChunkMetadata chunkMetadata = new ChunkMetadata();
+        chunkMetadata.setChunkHandle(chunkHandle);
+        return new ChunkMetadataResponse(filename, offset, chunkMetadata);
     }
 
     /**

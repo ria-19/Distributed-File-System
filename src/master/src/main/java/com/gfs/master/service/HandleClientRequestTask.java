@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * created by nikunjagarwal on 21-01-2022
@@ -34,11 +35,17 @@ public class HandleClientRequestTask implements Runnable{
             while(true) {
                 String clientRequestTypeString = (String)objectInputStream.readObject();
                 RequestType requestType = JsonHandler.convertStringToObject(clientRequestTypeString, RequestType.class);
-//                TODO : Incorporate the use of RequestType here
                 String clientRequestString = (String)objectInputStream.readObject();
-                log.info("Client request from {} for {}", remoteSocketAddress, clientRequestString);
+                log.info("Client {} request from {} for {}", requestType, remoteSocketAddress, clientRequestString);
                 ClientRequest clientRequest = JsonHandler.convertStringToObject(clientRequestString, ClientRequest.class);
-                objectOutputStream.writeObject(sendFileMetadata(clientRequest));
+                switch (requestType) {
+                    case READ:
+                        objectOutputStream.writeObject(sendFileMetadata(clientRequest));
+                        break;
+                    case WRITE:
+                       objectOutputStream.writeObject(sendNewFileMetadata(clientRequest));
+                        break;
+                }
             }
         } catch (Exception e) {
             log.error("error in HandleClientRequestTask ", e);
@@ -47,5 +54,10 @@ public class HandleClientRequestTask implements Runnable{
     public ChunkMetadataResponse sendFileMetadata(ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
         return metadataService.getChunkMetadataMetadata(clientRequest.getFilename(), clientRequest.getOffset());
+    }
+
+    public ChunkMetadataResponse sendNewFileMetadata (ClientRequest clientRequest) {
+        MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
+        return metadataService.updateNewFileMetadata(clientRequest.getFilename(), clientRequest.getOffset());
     }
 }
