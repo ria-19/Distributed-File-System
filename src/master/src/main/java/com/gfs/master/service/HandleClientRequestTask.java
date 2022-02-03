@@ -31,23 +31,24 @@ public class HandleClientRequestTask implements Runnable{
     public void run() {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
-            while(true) {
-                String clientRequestTypeString = (String)objectInputStream.readObject();
-                RequestType requestType = JsonHandler.convertStringToObject(clientRequestTypeString, RequestType.class);
-                String clientRequestString = (String)objectInputStream.readObject();
-                log.info("Client {} request from {} for {}", requestType, remoteSocketAddress, clientRequestString);
-                ClientRequest clientRequest = JsonHandler.convertStringToObject(clientRequestString, ClientRequest.class);
-                switch (requestType) {
-                    case READ:
-                        objectOutputStream.writeObject(sendFileMetadata(clientRequest));
-                        break;
-                    case WRITE:
-                       objectOutputStream.writeObject(sendNewFileMetadata(clientRequest));
-                        break;
-                    default:
-                        log.error("Invalid type of request");
+            String clientRequestTypeString = (String)objectInputStream.readObject();
+            RequestType requestType = JsonHandler.convertStringToObject(clientRequestTypeString, RequestType.class);
+            String clientRequestString = (String)objectInputStream.readObject();
+            log.info("Client {} request from {} for {}", requestType, remoteSocketAddress, clientRequestString);
+            ClientRequest clientRequest = JsonHandler.convertStringToObject(clientRequestString, ClientRequest.class);
+            switch (requestType) {
+                case READ:
+                    Response<MasterClientMetadataResponse> readResponse = sendFileMetadata(clientRequest);
+                    objectOutputStream.writeObject(JsonHandler.convertObjectToString(readResponse));
+                    break;
+                case WRITE:
+                    Response<MasterClientMetadataResponse> writeResponse = sendNewFileMetadata(clientRequest);
+                    objectOutputStream.writeObject(JsonHandler.convertObjectToString(writeResponse));
+                    break;
+                default:
+                    log.error("Invalid type of request");
                 }
-            }
+            socket.close();
         } catch (Exception e) {
             log.error("error in HandleClientRequestTask ", e);
         }
@@ -59,10 +60,10 @@ public class HandleClientRequestTask implements Runnable{
         return masterClientReadResponse;
     }
 
-    public MasterClientMetadataResponse sendNewFileMetadata (ClientRequest clientRequest) {
+    public Response<MasterClientMetadataResponse> sendNewFileMetadata (ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
         MasterClientMetadataResponse masterClientMetadataResponse = metadataService.fetchNewFileMetadata(clientRequest.getFilename(), clientRequest.getOffset());
         Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse);
-        return masterClientMetadataResponse;
+        return masterClientReadResponse;
     }
 }

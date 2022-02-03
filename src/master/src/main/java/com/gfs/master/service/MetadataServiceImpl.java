@@ -23,6 +23,7 @@ public class MetadataServiceImpl {
         this.fileMap = new HashMap<>();
         this.chunkMap = new HashMap<>();
         setMockDataDuringIntitalization(); // TODO : to be removed later
+        log.info("Filemap={}, Chunkmap={}", fileMap, chunkMap);
     }
 
     /**
@@ -87,6 +88,7 @@ public class MetadataServiceImpl {
      */
     private String getChunkHandle(String filename, Integer offset) {
         File file = this.fileMap.get(filename);
+        log.info("Fetched file={}", file);
         if(file == null)
             return null;
         return file.getOffsetChunkHandleMap().get(offset);

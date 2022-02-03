@@ -38,9 +38,9 @@ public class MasterConnectorServiceImpl {
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(requestType));
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(clientRequest));
             String responseString = (String) objectInputStream.readObject();
+            log.info("Response={}", responseString);
             response = JsonHandler.convertStringToObject(responseString, Response.class);
             socket.close();
-            log.info("Response={}", response);
         } catch (Exception e){
             log.error("Error:",e);
         }
