@@ -1,5 +1,9 @@
 package com.gfs.client.service;
 
+import com.gfs.client.model.MasterClientResponse;
+import com.gfs.client.model.RequestType;
+import com.gfs.client.model.Response;
+import com.gfs.client.model.request.ClientMasterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -19,17 +23,20 @@ public class ClientImpl implements CommandLineRunner {
     @Override
     public void run(String... args) {
          //TODO : Make requests to the master then to chunkserver based on REST APIs
+        readChunkData("mock-file-1", 1);
     }
 
 
     public void readChunkData(String filename, int offset) {
-        // Call master connector service for metadata
+        ClientMasterRequest clientMasterRequest = new ClientMasterRequest(filename, offset);
+        Response<MasterClientResponse> masterClientResponseResponse = masterConnectorService.sendRequestToMaster(clientMasterRequest, RequestType.READ);
         // Call chunk connector service for data
     }
 
     public void writeChunkData(String filename, String data) {
         // implement breaking file into chunks
-        // Call master connector service for metadata
+        ClientMasterRequest clientMasterRequest = new ClientMasterRequest(filename, 0);
+        Response<MasterClientResponse> masterClientResponseResponse = masterConnectorService.sendRequestToMaster(clientMasterRequest, RequestType.WRITE);
         // Call chunk connector service for data
     }
 

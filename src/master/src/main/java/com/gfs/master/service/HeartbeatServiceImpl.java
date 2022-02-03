@@ -76,4 +76,10 @@ public class HeartbeatServiceImpl {
         }
         return updatedChunkServerChunkMetadataList;
     }
+
+    public static ArrayList<String> fetchActiveChunkservers() {
+        ArrayList<String> chunkServers = new ArrayList<>();
+        lastHeartBeatTimeOfServers.forEach( (chunkserver, lastBeat) -> chunkServers.add(chunkserver));
+        return chunkServers;
+    }
 }

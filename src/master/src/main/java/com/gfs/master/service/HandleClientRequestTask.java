@@ -1,19 +1,18 @@
 package com.gfs.master.service;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.gfs.master.model.RequestType;
 import com.gfs.master.model.request.ClientRequest;
-import com.gfs.master.model.response.ChunkMetadataResponse;
+import com.gfs.master.model.response.MasterClientMetadataResponse;
+import com.gfs.master.model.response.Response;
+import com.gfs.master.model.response.ResponseStatus;
 import com.gfs.master.utils.JsonHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * created by nikunjagarwal on 21-01-2022
@@ -26,12 +25,12 @@ public class HandleClientRequestTask implements Runnable{
 
     private Socket socket;
     private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
 
     @Override
     public void run() {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(true) {
                 String clientRequestTypeString = (String)objectInputStream.readObject();
                 RequestType requestType = JsonHandler.convertStringToObject(clientRequestTypeString, RequestType.class);
@@ -45,19 +44,25 @@ public class HandleClientRequestTask implements Runnable{
                     case WRITE:
                        objectOutputStream.writeObject(sendNewFileMetadata(clientRequest));
                         break;
+                    default:
+                        log.error("Invalid type of request");
                 }
             }
         } catch (Exception e) {
             log.error("error in HandleClientRequestTask ", e);
         }
     }
-    public ChunkMetadataResponse sendFileMetadata(ClientRequest clientRequest) {
+    public Response<MasterClientMetadataResponse> sendFileMetadata(ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
-        return metadataService.getChunkMetadataMetadata(clientRequest.getFilename(), clientRequest.getOffset());
+        MasterClientMetadataResponse masterClientMetadataResponse = metadataService.getChunkMetadata(clientRequest.getFilename(), clientRequest.getOffset());
+        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse);
+        return masterClientReadResponse;
     }
 
-    public ChunkMetadataResponse sendNewFileMetadata (ClientRequest clientRequest) {
+    public MasterClientMetadataResponse sendNewFileMetadata (ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
-        return metadataService.updateNewFileMetadata(clientRequest.getFilename(), clientRequest.getOffset());
+        MasterClientMetadataResponse masterClientMetadataResponse = metadataService.fetchNewFileMetadata(clientRequest.getFilename(), clientRequest.getOffset());
+        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse);
+        return masterClientMetadataResponse;
     }
 }

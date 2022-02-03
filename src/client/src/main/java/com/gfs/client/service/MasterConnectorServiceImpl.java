@@ -1,5 +1,6 @@
 package com.gfs.client.service;
 
+import com.gfs.client.model.MasterClientResponse;
 import com.gfs.client.model.RequestType;
 import com.gfs.client.model.Response;
 import com.gfs.client.model.Source;
@@ -27,11 +28,12 @@ public class MasterConnectorServiceImpl {
 
     public Response sendRequestToMaster(ClientRequest clientRequest, RequestType requestType) {
         log.info("Establishing connection and sending request to master={}:{}, clientRequest={}, requestType={}", masterServerHost,masterServerPort, clientRequest, requestType);
-        Response response = new Response();
+        Response<MasterClientResponse> response = new Response();
         try{
             Socket socket = new Socket(masterServerHost, masterServerPort);
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            log.info("Connection Established with master");
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CLIENT));
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(requestType));
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(clientRequest));

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -55,6 +56,7 @@ public class MasterServerImpl implements CommandLineRunner {
                 try {
                     Socket socket = serverSocket.accept();
                     log.info("Started Connection with Remote Socket Address : " + socket.getRemoteSocketAddress());
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                     ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                     log.info("Waiting to check Type of Connection");
                     // Assumption : The first message from the connected source will be of Source type
@@ -66,7 +68,7 @@ public class MasterServerImpl implements CommandLineRunner {
                             executorServiceForChunkServer.execute(new HandleChunkServerRequestTask(socket, objectInputStream));
                             break;
                         case CLIENT:
-                            executorServiceForClients.execute(new HandleClientRequestTask(socket, objectInputStream));
+                            executorServiceForClients.execute(new HandleClientRequestTask(socket, objectInputStream, objectOutputStream));
                             break;
                         default:
                             log.error("Incorrect source");
