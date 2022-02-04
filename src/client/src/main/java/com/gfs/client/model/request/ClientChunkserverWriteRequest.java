@@ -2,8 +2,7 @@ package com.gfs.client.model.request;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClientChunkserverWriteRequest extends ClientRequest {

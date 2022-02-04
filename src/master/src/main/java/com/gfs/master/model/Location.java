@@ -1,5 +1,7 @@
 package com.gfs.master.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,8 @@ import java.util.Date;
 @Builder
 public class Location {
     private String chunkserverUrl;
+    @JsonIgnore
     private Date lastUpdated;
+    @JsonIgnore
     private int versionNo;
 }

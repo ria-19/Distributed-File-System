@@ -47,12 +47,11 @@ public class HeartbeatServiceImpl {
 
     /**
      * Updates the heartbeat of chunkserver with latest heartbeat time
-     * @param remoteSocket : url of remote chunkserver
      * @param chunkServerRequest: chunkserver request containing chunk metadata
      */
-    public static void updateHeartBeatOfServer(String remoteSocket, ChunkServerRequest chunkServerRequest) {
-        log.info("Updating heartbeat inside updateHeartBeatOfServer() from {}", remoteSocket);
-        lastHeartBeatTimeOfServers.put(remoteSocket, new Date());
+    public static void updateHeartBeatOfServer(ChunkServerRequest chunkServerRequest) {
+        log.info("Updating heartbeat inside updateHeartBeatOfServer() from {}", chunkServerRequest.getChunkServerUrl());
+        lastHeartBeatTimeOfServers.put(chunkServerRequest.getChunkServerUrl(), new Date());
         if(chunkServerRequest.isContainsChunksMetadata()){
             ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = addChunkServerDetails(chunkServerRequest.getChunkServerChunkMetadataList());
             MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();

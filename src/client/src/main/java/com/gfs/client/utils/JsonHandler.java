@@ -15,4 +15,8 @@ public class JsonHandler {
     public static <T> T convertStringToObject(String stringValue, Class<T> className) throws JacksonException {
         return objectMapper.readValue(stringValue, className);
     }
+
+    public static <T> T convertObjectToOtherObject(Object object, Class<T> targetClassName) {
+        return objectMapper.convertValue(object, targetClassName);
+    }
 }

@@ -50,8 +50,7 @@ public class MetadataServiceImpl {
         if(chunkHandle == null) {
             return null;
         }
-        MasterClientMetadataResponse chunkMetadataResponse = new MasterClientMetadataResponse();
-        chunkMetadataResponse.builder().filename(filename).offset(offset).chunkMetadata(this.chunkMap.get(chunkHandle)).build();
+        MasterClientMetadataResponse chunkMetadataResponse = MasterClientMetadataResponse.builder().filename(filename).offset(offset).chunkMetadata(this.chunkMap.get(chunkHandle)).build();
         log.info("Fetched chunk metadata={}", chunkMetadataResponse);
         return chunkMetadataResponse;
     }
