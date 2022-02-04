@@ -17,6 +17,6 @@ import java.util.HashMap;
 @Builder
 public class ChunkMetadata {
     private String chunkHandle;
-    private ArrayList<Location> locations;
+    private HashMap<String, Location> locations;
     private String leaseServer;
 }

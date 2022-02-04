@@ -14,6 +14,7 @@ import java.util.ArrayList;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChunkServerRequest{
+    private String chunkServerUrl;
     private boolean containsChunksMetadata;
     private ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList;
 }

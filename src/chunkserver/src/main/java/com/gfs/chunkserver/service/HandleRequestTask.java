@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
@@ -23,6 +24,7 @@ public class HandleRequestTask implements Runnable{
     public void run() {
         try{
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             String sourceString = (String)objectInputStream.readObject();
             log.info("Client Request of Type : {} from {}", sourceString, remoteSocketAddress);
@@ -30,11 +32,11 @@ public class HandleRequestTask implements Runnable{
             switch (source){
                 case CHUNKSERVER:
                     ChunkserverRequestHandlerImpl chunkserverRequestHandler = new ChunkserverRequestHandlerImpl();
-                    chunkserverRequestHandler.handleChunkserverRequest(socket, objectInputStream);
+                    chunkserverRequestHandler.handleChunkserverRequest(socket, objectInputStream, objectOutputStream);
                     break;
                 case CLIENT:
                     ClientRequestHandlerImpl clientRequestHandler = new ClientRequestHandlerImpl();
-                    clientRequestHandler.handleClientRequest(socket, objectInputStream);
+                    clientRequestHandler.handleClientRequest(socket, objectInputStream, objectOutputStream);
                     break;
                 default:
                     log.error("Incorrect type");

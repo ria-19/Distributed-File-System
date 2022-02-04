@@ -30,7 +30,7 @@ public class HandleChunkServerRequestTask implements Runnable{
                 String chunkServerRequestString = (String)objectInputStream.readObject();
                 log.info("Heartbeat Request from Chunkserver {} : {}", remoteSocketAddress, chunkServerRequestString);
                 ChunkServerRequest chunkServerRequest = JsonHandler.convertStringToObject(chunkServerRequestString, ChunkServerRequest.class);
-                HeartbeatServiceImpl.updateHeartBeatOfServer(remoteSocketAddress,chunkServerRequest);
+                HeartbeatServiceImpl.updateHeartBeatOfServer(chunkServerRequest);
             }
         } catch (Exception e) {
             log.error("error : ", e);

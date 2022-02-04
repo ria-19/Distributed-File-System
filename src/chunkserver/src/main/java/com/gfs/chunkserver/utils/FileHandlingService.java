@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 public class FileHandlingService {
 
 
-    private final static String basePath = "./src/chunkserver/x";
+    private final static String basePath = "./chunkdata";
 
     /**
      * Utility Function to read data from a file
@@ -41,10 +41,18 @@ public class FileHandlingService {
      * @param data {@link String} data to append to file
      */
     public static void writeFile(String filepath, String data) {
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Paths.get(basePath, filepath).toString(), true))) {
-            bufferedWriter.write(data);
-        } catch (IOException e) {
-            log.error("IOException in FileHandlingService :: writeFile", e);
+        String finalFilePath = Paths.get(basePath, filepath).toString();
+        File file = new File(finalFilePath);
+        try{
+            file.createNewFile();
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(finalFilePath, true))) {
+                bufferedWriter.write(data);
+            } catch (IOException e) {
+                log.error("IOException in FileHandlingService :: writeFile", e);
+            }
+        } catch (Exception e) {
+            log.error("Error", e);
         }
+
     }
 }

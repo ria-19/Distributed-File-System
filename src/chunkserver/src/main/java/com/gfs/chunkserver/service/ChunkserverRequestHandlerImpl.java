@@ -27,10 +27,9 @@ public class ChunkserverRequestHandlerImpl {
      * @param socket: socket connected to the other chunkserver
      * @param objectInputStream: objectOutputStream for that socket
      */
-    public void handleChunkserverRequest(Socket socket, ObjectInputStream objectInputStream) {
+    public void handleChunkserverRequest(Socket socket, ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             String request = (String) objectInputStream.readObject();
             log.info("Client Request of Type : {} from {}", request, remoteSocketAddress);
             RequestType requestType = JsonHandler.convertStringToObject(request, RequestType.class);

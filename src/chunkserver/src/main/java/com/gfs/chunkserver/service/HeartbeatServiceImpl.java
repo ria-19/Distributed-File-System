@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -21,14 +22,22 @@ import java.util.ArrayList;
 @Slf4j
 public class HeartbeatServiceImpl {
 
-    @Value("${chunkserver.host}")
+
     private static String chunkserverHost;
-    @Value("${chunkserver.port}")
     private static int chunkserverPort;
-    @Value("${masterserver.host}")
     private static String masterServerHost;
-    @Value("${masterserver.port}")
     private static int masterServerPort;
+
+    public HeartbeatServiceImpl(@Value("${masterserver.host}") String masterServerHost,
+                                @Value("${masterserver.port}") int masterServerPort,
+                                @Value("${chunkserver.port}") int chunkserverPort,
+                                @Value("${chunkserver.host}") String chunkserverHost
+                            ) throws IOException {
+        HeartbeatServiceImpl.masterServerHost = masterServerHost;
+        HeartbeatServiceImpl.masterServerPort = masterServerPort;
+        HeartbeatServiceImpl.chunkserverHost = chunkserverHost;
+        HeartbeatServiceImpl.chunkserverPort = chunkserverPort;
+    }
 
     /**
      * It sends 2 types of heartbeats to Master Server at regular intervals
@@ -41,6 +50,7 @@ public class HeartbeatServiceImpl {
         while(true) {
             log.info("Sending heartbeat to master server");
             ChunkServerRequest chunkServerRequest = new ChunkServerRequest();
+            chunkServerRequest.setChunkServerUrl(chunkserverHost+":"+chunkserverPort);
             if(heartBeatCounter == 3) {
                 chunkServerRequest.setContainsChunksMetadata(true);
                 chunkServerRequest.setChunkServerChunkMetadataList(fetchChunkServerMetadata());

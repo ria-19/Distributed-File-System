@@ -29,10 +29,9 @@ public class ClientRequestHandlerImpl {
      * @param socket:
      * @param objectInputStream:
      */
-    public void handleClientRequest(Socket socket, ObjectInputStream objectInputStream) {
+    public void handleClientRequest(Socket socket, ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) {
         try {
             String remoteSocketAddress = socket.getRemoteSocketAddress().toString();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             String request = (String) objectInputStream.readObject();
             log.info("Client Request of Type : {} from {}", request, remoteSocketAddress);
             RequestType requestType = JsonHandler.convertStringToObject(request, RequestType.class);

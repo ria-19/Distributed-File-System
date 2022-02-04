@@ -13,6 +13,7 @@ import java.util.ArrayList;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChunkServerRequest extends ServerRequest {
+    private String chunkServerUrl;
     private boolean containsChunksMetadata;
     private ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList;
 }
