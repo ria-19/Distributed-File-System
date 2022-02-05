@@ -1,8 +1,10 @@
 package com.gfs.chunkserver.utils;
 
+import com.gfs.chunkserver.service.HeartbeatServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -14,13 +16,16 @@ import java.util.stream.Stream;
 /**
  * Service class to handle File Operations
  */
-@Service
-@AllArgsConstructor
 @Slf4j
+@Service
 public class FileHandlingService {
 
+    private static String baseFileDirectoryPath;
 
-    private final static String basePath = "./chunkdata";
+    public FileHandlingService(@Value("${chunkserver.basePath}") String baseFileDirectoryPath) {
+        FileHandlingService.baseFileDirectoryPath = baseFileDirectoryPath;
+    }
+
 
     /**
      * Utility Function to read data from a file
@@ -29,8 +34,8 @@ public class FileHandlingService {
      * @throws IOException
      */
     public static String readFile(String filepath) throws IOException {
-        log.info("Reading from file : {} ", Paths.get(basePath, filepath));
-        Stream<String> lines = Files.lines(Paths.get(basePath, filepath));
+        log.info("Reading from file : {} ", Paths.get(baseFileDirectoryPath, filepath));
+        Stream<String> lines = Files.lines(Paths.get(baseFileDirectoryPath, filepath));
         return lines.collect(Collectors.joining("\n"));
     }
 
@@ -41,7 +46,7 @@ public class FileHandlingService {
      * @param data {@link String} data to append to file
      */
     public static void writeFile(String filepath, String data) {
-        String finalFilePath = Paths.get(basePath, filepath).toString();
+        String finalFilePath = Paths.get(baseFileDirectoryPath, filepath).toString();
         File file = new File(finalFilePath);
         try{
             file.createNewFile();

@@ -24,7 +24,7 @@ public class ClientImpl implements CommandLineRunner {
     @Override
     public void run(String... args) {
          //TODO : Make requests to the master then to chunkserver based on REST APIs
-//        writeChunkData("file-1","Random data");
+        writeChunkData("file-1","Random data");
         readChunkData("file-1", 1);
     }
 
@@ -32,7 +32,8 @@ public class ClientImpl implements CommandLineRunner {
     public void readChunkData(String filename, int offset) {
         ClientMasterRequest clientMasterRequest = new ClientMasterRequest(filename, offset);
         Response<MasterClientResponse> masterClientResponseResponse = masterConnectorService.sendRequestToMaster(clientMasterRequest, RequestType.READ);
-        chunkserverConnectorService.readChunkDataFromChunkServer(masterClientResponseResponse.getData());
+        MasterClientResponse masterClientResponse = JsonHandler.convertObjectToOtherObject(masterClientResponseResponse.getData(), MasterClientResponse.class);
+        chunkserverConnectorService.readChunkDataFromChunkServer(masterClientResponse.getChunkMetadata());
     }
 
     public void writeChunkData(String filename, String data) {
@@ -40,7 +41,7 @@ public class ClientImpl implements CommandLineRunner {
         ClientMasterRequest clientMasterRequest = new ClientMasterRequest(filename, 1);
         Response<MasterClientResponse> masterClientResponseResponse = masterConnectorService.sendRequestToMaster(clientMasterRequest, RequestType.WRITE);
         MasterClientResponse masterClientResponse = JsonHandler.convertObjectToOtherObject(masterClientResponseResponse.getData(), MasterClientResponse.class);
-        chunkserverConnectorService.writeChunkDataToChunkServer(masterClientResponse, data);
+        chunkserverConnectorService.writeChunkDataToChunkServer(masterClientResponse.getChunkMetadata(), data);
     }
 
 

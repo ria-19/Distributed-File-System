@@ -10,9 +10,8 @@ import java.util.ArrayList;
  */
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Data
 public class ClientChunkserverWriteAckRequest extends ClientRequest {
     private String chunkHandle;
-    ArrayList<Location> locations;
+    ArrayList<Location> secondaryCSLocations;
 }

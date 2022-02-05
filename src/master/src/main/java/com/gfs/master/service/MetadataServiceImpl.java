@@ -101,7 +101,6 @@ public class MetadataServiceImpl {
      */
     public ArrayList<MasterClientMetadataResponse> updateNewFilesMetadata(String filename, ArrayList<Integer> offsets) {
         // TODO : to be revisited while implementing write mechanism
-        File file = new File(filename, new HashMap<>());
         HashMap<Integer, String> offsetChunkHandles = new HashMap<>();
         ArrayList<MasterClientMetadataResponse> chunkMetadataResponseList = new ArrayList<>();
         for(Integer offset : offsets) {
@@ -126,9 +125,17 @@ public class MetadataServiceImpl {
         HashMap<String, Location> chunkserverLocations = fetchRandomChunkserverLocations();
         String leaseServer = getRandomLeaseChunkserver(chunkserverLocations);
         ChunkMetadata chunkMetadata = new ChunkMetadata(chunkHandle, chunkserverLocations, leaseServer);
+        insertNewlyGeneratedMetadata(filename, offset, chunkMetadata);
         return new MasterClientMetadataResponse(filename, offset, chunkMetadata);
     }
 
+    private void insertNewlyGeneratedMetadata(String filename, Integer offset, ChunkMetadata chunkMetadata) {
+        HashMap<Integer, String> offsetChunkHandleMap = new HashMap<>();
+        offsetChunkHandleMap.put(offset, chunkMetadata.getChunkHandle());
+        File file = new File(filename, offsetChunkHandleMap);
+        fileMap.put(filename, file);
+        chunkMap.put(chunkMetadata.getChunkHandle(), chunkMetadata);
+    }
     /**
      * generate new unique chunk handle from the given filename, offset
      * @return Integer: newly created chunkhandle
