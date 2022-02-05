@@ -15,5 +15,5 @@ import java.util.ArrayList;
 @Data
 public class ClientChunkserverWriteAckRequest {
     private String chunkHandle;
-    ArrayList<Location> locations;
+    ArrayList<Location> secondaryCSLocations;
 }

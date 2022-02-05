@@ -22,45 +22,45 @@ import java.util.HashMap;
 @Slf4j
 public class ChunkserverConnectorServiceImpl {
 
-    public Response writeChunkDataToChunkServer(MasterClientResponse masterClientResponse, String data) {
-        log.info("Inside writeChunkDataToChunkServer with masterClientResponse={}",masterClientResponse);
-        ChunkMetadata chunkMetadata = masterClientResponse.getChunkMetadata();
+    public Response writeChunkDataToChunkServer(ChunkMetadata chunkMetadata, String data) {
+        log.info("Inside writeChunkDataToChunkServer with chunkMetadata={}",chunkMetadata);
         HashMap<String, Location> locationHashMap = chunkMetadata.getLocations();
-        ArrayList<Location> locations = new ArrayList();
-        locationHashMap.forEach((locationUrl, location) -> locations.add(location));
-        String leaseServerString = chunkMetadata.getLeaseServer();
-        ClientChunkserverWriteRequest writeRequest = new ClientChunkserverWriteRequest(chunkMetadata.getChunkHandle(), data);
-        sendDataToChunkServersForCache(writeRequest, locations);
-        Location leaseServer = locationHashMap.remove(leaseServerString);
-        ClientChunkserverWriteAckRequest writeAckRequest = new ClientChunkserverWriteAckRequest(chunkMetadata.getChunkHandle(), locations);
-        return sendAckToPrimaryToWriteData(writeAckRequest, leaseServer);
+        sendDataToChunkServersForCache(chunkMetadata, locationHashMap, data);
+        return sendAckToPrimaryToWriteData(chunkMetadata, locationHashMap);
     }
 
-    public Response readChunkDataFromChunkServer(MasterClientResponse masterClientResponse) {
-        ChunkMetadata chunkMetadata = masterClientResponse.getChunkMetadata();
+    public Response readChunkDataFromChunkServer(ChunkMetadata chunkMetadata) {
+        log.info("Inside writeChunkDataToChunkServer with chunkMetadata={}",chunkMetadata);
         HashMap<String, Location> locationHashMap = chunkMetadata.getLocations();
-        ArrayList<Location> locations = new ArrayList(locationHashMap.entrySet());
+        ArrayList<Location> locations = getchunkServerArray(locationHashMap);
         if(locations.size() == 0)
             return new Response(ResponseStatus.ERROR, null);
         ClientChunkserverReadRequest clientChunkserverReadRequest = new ClientChunkserverReadRequest(chunkMetadata.getChunkHandle());
-        return readChunkDataFromChunkServer(clientChunkserverReadRequest, locations.get(0));
+        return sendRequestToChunkServer(locations.get(0).getChunkserverUrl(), clientChunkserverReadRequest, RequestType.READCHUNK);
     }
 
-    private Response readChunkDataFromChunkServer(ClientChunkserverReadRequest clientChunkserverReadRequest, Location location){
-        return sendRequestToChunkServer(location.getChunkserverUrl(), clientChunkserverReadRequest, RequestType.READCHUNK);
-    }
 
-    private Response sendAckToPrimaryToWriteData(ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest, Location primaryChunkserverLocation){
+    private Response sendAckToPrimaryToWriteData(ChunkMetadata chunkMetadata, HashMap<String, Location> locationHashMap){
+        String primaryCSString = chunkMetadata.getLeaseServer();
+        Location primaryChunkserverLocation = locationHashMap.get(primaryCSString);
+        ArrayList<Location> secondaryCS = getSecondaryCSLocations(locationHashMap, primaryCSString);
+        ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest = new ClientChunkserverWriteAckRequest(chunkMetadata.getChunkHandle(), secondaryCS);
+
         return sendRequestToChunkServer(primaryChunkserverLocation.getChunkserverUrl(), clientChunkserverWriteAckRequest, RequestType.WRITETOFILEFROMCACHE);
     }
 
-    private Response sendDataToChunkServersForCache(ClientChunkserverWriteRequest clientChunkserverWriteRequest, ArrayList<Location> chunkServerLocations){
-        log.info("Sending data to all chunkservers for caching. clientChunkserverWriteRequest={}, Chunkservers={}", clientChunkserverWriteRequest, chunkServerLocations);
+    private Response sendDataToChunkServersForCache(ChunkMetadata chunkMetadata, HashMap<String, Location> locationHashMap, String data){
+        log.info("Sending data to all chunkservers for caching. chunkMetadata={}, locations={}", chunkMetadata, locationHashMap);
+        ClientChunkserverWriteRequest clientChunkserverWriteRequest = new ClientChunkserverWriteRequest(chunkMetadata.getChunkHandle(), data);
+        ArrayList<Location> chunkServerLocations = getchunkServerArray(locationHashMap);
+
         int noOfSuccessfulSends = 0;
         Response finalResponse = new Response(ResponseStatus.SUCCESS, null);
         for (Location location: chunkServerLocations) {
             String chunkServerSocketAddress = location.getChunkserverUrl();
+            log.info("Sending data to chunkserver={}, writeRequest={}",chunkServerSocketAddress, clientChunkserverWriteRequest);
             Response response = sendRequestToChunkServer(chunkServerSocketAddress, clientChunkserverWriteRequest, RequestType.WRITETOCACHE);
+            log.info("Response from {}:{}", chunkServerSocketAddress, response);
             if(response.getResponseStatus() == ResponseStatus.SUCCESS)
                 noOfSuccessfulSends++;
         }
@@ -71,14 +71,14 @@ public class ChunkserverConnectorServiceImpl {
     }
 
     private Response sendRequestToChunkServer(String chunkServerSocketAddress, ClientRequest clientRequest, RequestType requestType) {
-        log.info("Establishing connection and sending request to chunkserver={}, clientRequest={}, requestType={}", chunkServerSocketAddress, clientRequest, requestType);
+        log.info("Connecting and Sending request to chunkserver={}, requestType={}, clientRequest={}", chunkServerSocketAddress,requestType, clientRequest);
         Response response = new Response();
         try{
             String chunkServerHost = chunkServerSocketAddress.split(":")[0];
             int chunkServerPort = Integer.parseInt(chunkServerSocketAddress.split(":")[1]);
             Socket socket = new Socket(chunkServerHost, chunkServerPort);
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(Source.CLIENT));
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(requestType));
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(clientRequest));
@@ -90,5 +90,18 @@ public class ChunkserverConnectorServiceImpl {
             log.error("Error:",e);
         }
         return response;
+    }
+
+    private ArrayList<Location> getchunkServerArray(HashMap<String, Location> locationHashMap) {
+        ArrayList<Location> locations = new ArrayList<>();
+        locationHashMap.forEach((locationUrl, location) -> locations.add(location));
+        return locations;
+    }
+
+    private ArrayList<Location> getSecondaryCSLocations(HashMap<String, Location> locationHashMap, String primaryCS) {
+        ArrayList<Location> locations = new ArrayList<>();
+        locationHashMap.remove(primaryCS);
+        locationHashMap.forEach((locationUrl, location) -> locations.add(location));
+        return locations;
     }
 }

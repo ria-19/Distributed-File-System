@@ -13,6 +13,7 @@ import com.gfs.chunkserver.utils.JsonHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -22,6 +23,7 @@ import java.net.Socket;
 @Data
 @AllArgsConstructor
 @Slf4j
+@Service
 public class ClientRequestHandlerImpl {
 
     /**
@@ -99,7 +101,7 @@ public class ClientRequestHandlerImpl {
      */
     private ChunkserverResponse writeAckToPrimary(ClientChunkserverWriteAckRequest clientChunkserverWriteAckRequest){
         writeToFileFromCache(clientChunkserverWriteAckRequest.getChunkHandle());
-        for (Location location : clientChunkserverWriteAckRequest.getLocations()) {
+        for (Location location : clientChunkserverWriteAckRequest.getSecondaryCSLocations()) {
             String secondaryChunkServerSocketAddress = location.getChunkserverUrl();
             ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = new ChunkserverChunkserverFinalWriteRequest(clientChunkserverWriteAckRequest.getChunkHandle());
             try{
