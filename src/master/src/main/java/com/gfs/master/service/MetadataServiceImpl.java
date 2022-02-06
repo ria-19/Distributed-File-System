@@ -22,7 +22,6 @@ public class MetadataServiceImpl {
     private MetadataServiceImpl(){
         this.fileMap = new HashMap<>();
         this.chunkMap = new HashMap<>();
-        setMockDataDuringIntitalization(); // TODO : to be removed later
         log.info("Filemap={}, Chunkmap={}", fileMap, chunkMap);
     }
 
@@ -83,7 +82,7 @@ public class MetadataServiceImpl {
      * fetches chunk handle from the filename, offset
      * @param filename: name of the file to be fetched
      * @param offset: offset of the file
-     * @return integer: chunk handle for the given filename offset
+     * @return String: chunk handle for the given filename offset
      */
     private String getChunkHandle(String filename, Integer offset) {
         File file = this.fileMap.get(filename);
@@ -129,6 +128,12 @@ public class MetadataServiceImpl {
         return new MasterClientMetadataResponse(filename, offset, chunkMetadata);
     }
 
+    /**
+     * inserts new metadata in fileMap and chunkMap
+     * @param filename : filename
+     * @param offset : offset of data
+     * @param chunkMetadata : metadata for the given chunk
+     */
     private void insertNewlyGeneratedMetadata(String filename, Integer offset, ChunkMetadata chunkMetadata) {
         HashMap<Integer, String> offsetChunkHandleMap = new HashMap<>();
         offsetChunkHandleMap.put(offset, chunkMetadata.getChunkHandle());
@@ -136,23 +141,20 @@ public class MetadataServiceImpl {
         fileMap.put(filename, file);
         chunkMap.put(chunkMetadata.getChunkHandle(), chunkMetadata);
     }
+
     /**
      * generate new unique chunk handle from the given filename, offset
-     * @return Integer: newly created chunkhandle
+     * @return String: newly created chunkhandle
      */
     private String generateNewChunkHandle() {
         return UUID.randomUUID().toString();
     }
 
-    //TODO: to be removed later
-    private void setMockDataDuringIntitalization(){
-        HashMap<Integer, String > offsetMap =  new HashMap<>();
-        offsetMap.put(1, "12345");
-        File file = new File("mock-file-1", offsetMap);
-        fileMap.put("mock-file-1", file);
-        chunkMap.put("12345",new ChunkMetadata("12345", new HashMap<>(), ""));
-    }
 
+    /**
+     * fetches list of maximum 3 active chunkservers
+     * @return HashMap<String, Location> : list of active chunkservers
+     */
     private HashMap<String, Location> fetchRandomChunkserverLocations() {
         HashMap<String, Location> randomChunkservers = new HashMap<>();
         ArrayList<String> activeChunkservers = HeartbeatServiceImpl.fetchActiveChunkservers();

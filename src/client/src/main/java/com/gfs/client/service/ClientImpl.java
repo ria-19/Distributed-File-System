@@ -24,7 +24,7 @@ public class ClientImpl implements CommandLineRunner {
     @Override
     public void run(String... args) {
          //TODO : Make requests to the master then to chunkserver based on REST APIs
-        writeChunkData("file-1","Random data");
+        writeChunkData("file-1","Random data is written");
         readChunkData("file-1", 1);
     }
 

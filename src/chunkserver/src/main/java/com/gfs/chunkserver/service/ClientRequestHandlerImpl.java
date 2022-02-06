@@ -89,7 +89,7 @@ public class ClientRequestHandlerImpl {
         ChunkCacheService chunkCacheService = ChunkCacheService.getInstance();
         ChunkCacheData chunkCacheData = new ChunkCacheData(clientChunkserverWriteRequest.getData());
         chunkCacheService.insertIntoChunkCache(clientChunkserverWriteRequest.getChunkHandle(), chunkCacheData);
-        return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
+        return new ChunkserverResponse(ResponseStatus.SUCCESS, null, null);
     }
 
     /**
@@ -108,14 +108,14 @@ public class ClientRequestHandlerImpl {
                 ChunkserverResponse chunkserverResponse = sendWriteFileRequestToOtherChunkServers(secondaryChunkServerSocketAddress, chunkserverChunkserverFinalWriteRequest);
                 if(!chunkserverResponse.getResponseStatus().equals(ResponseStatus.SUCCESS)) {
                     log.error("Write didn't happen in CS={}, reponse={}", location, chunkserverResponse);
-                    return new ChunkserverResponse(ResponseStatus.ERROR, null);
+                    return new ChunkserverResponse(ResponseStatus.ERROR, null, "Unsuccessful write in one of th cs");
                 }
             } catch (Exception e){
                 log.error("Error : {}", e);
-                return new ChunkserverResponse(ResponseStatus.ERROR, null);
+                return new ChunkserverResponse(ResponseStatus.ERROR, null, e.getMessage());
             }
         }
-        return new ChunkserverResponse(ResponseStatus.SUCCESS, null);
+        return new ChunkserverResponse(ResponseStatus.SUCCESS, null, null);
     }
 
     private void writeToFileFromCache(String chunkHandle) {
