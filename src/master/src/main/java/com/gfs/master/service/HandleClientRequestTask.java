@@ -56,14 +56,15 @@ public class HandleClientRequestTask implements Runnable{
     public Response<MasterClientMetadataResponse> sendFileMetadata(ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
         MasterClientMetadataResponse masterClientMetadataResponse = metadataService.getChunkMetadata(clientRequest.getFilename(), clientRequest.getOffset());
-        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse);
+        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse, null);
         return masterClientReadResponse;
     }
+
 
     public Response<MasterClientMetadataResponse> sendNewFileMetadata (ClientRequest clientRequest) {
         MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
         MasterClientMetadataResponse masterClientMetadataResponse = metadataService.fetchNewFileMetadata(clientRequest.getFilename(), clientRequest.getOffset());
-        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse);
+        Response<MasterClientMetadataResponse> masterClientReadResponse = new Response<>(ResponseStatus.SUCCESS, masterClientMetadataResponse, null);
         return masterClientReadResponse;
     }
 }

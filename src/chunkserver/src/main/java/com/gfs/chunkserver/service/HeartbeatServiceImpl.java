@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -32,7 +31,7 @@ public class HeartbeatServiceImpl {
                                 @Value("${masterserver.port}") int masterServerPort,
                                 @Value("${chunkserver.port}") int chunkserverPort,
                                 @Value("${chunkserver.host}") String chunkserverHost
-                            ) throws IOException {
+                            ) {
         HeartbeatServiceImpl.masterServerHost = masterServerHost;
         HeartbeatServiceImpl.masterServerPort = masterServerPort;
         HeartbeatServiceImpl.chunkserverHost = chunkserverHost;
@@ -51,7 +50,7 @@ public class HeartbeatServiceImpl {
             log.info("Sending heartbeat to master server");
             ChunkServerRequest chunkServerRequest = new ChunkServerRequest();
             chunkServerRequest.setChunkServerUrl(chunkserverHost+":"+chunkserverPort);
-            if(heartBeatCounter == 3) {
+            if(heartBeatCounter == 6) {
                 chunkServerRequest.setContainsChunksMetadata(true);
                 chunkServerRequest.setChunkServerChunkMetadataList(fetchChunkServerMetadata());
                 heartBeatCounter = 0;
@@ -61,7 +60,7 @@ public class HeartbeatServiceImpl {
             String chunkstring = JsonHandler.convertObjectToString(chunkServerRequest);
             objectOutputStream.writeObject(chunkstring);
             heartBeatCounter++;
-            Thread.sleep(5000);
+            Thread.sleep(10000);
         }
     }
 
@@ -93,13 +92,7 @@ public class HeartbeatServiceImpl {
     }
 
     private static ArrayList<ChunkServerChunkMetadata> fetchChunkServerMetadata() {
-        ArrayList<ChunkServerChunkMetadata> chunkMetadataList = new ArrayList<>();
-        //TODO: Fetch actual metadata instead of mock chunkmetadata
-        ChunkServerChunkMetadata chunkMetadata = new ChunkServerChunkMetadata();
-        chunkMetadata.setChunkHandle("12345");
-        Location location = new Location(chunkserverHost + ":"+ chunkserverPort,2);
-        chunkMetadata.setLocation(location);
-        chunkMetadataList.add(chunkMetadata);
-        return  chunkMetadataList;
+        ChunkserverMetadataServiceImpl chunkserverMetadataService = ChunkserverMetadataServiceImpl.getInstance();
+        return  chunkserverMetadataService.fetchChunkMetadata();
     }
 }

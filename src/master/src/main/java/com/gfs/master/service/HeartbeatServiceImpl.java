@@ -65,7 +65,7 @@ public class HeartbeatServiceImpl {
      * @return ArrayList<ChunkServerChunkMetadata>: updated list of chunk metadata
      */
     private static ArrayList<ChunkServerChunkMetadata> addChunkServerDetails(ArrayList<ChunkServerChunkMetadata> chunkServerChunkMetadataList){
-        log.info("Inside addChunkServerDetails()");
+        log.debug("Inside addChunkServerDetails()");
         ArrayList<ChunkServerChunkMetadata> updatedChunkServerChunkMetadataList = new ArrayList<>();
         for(ChunkServerChunkMetadata chunkServerChunkMetadata: chunkServerChunkMetadataList){
             Location location = chunkServerChunkMetadata.getLocation();
@@ -76,6 +76,11 @@ public class HeartbeatServiceImpl {
         return updatedChunkServerChunkMetadataList;
     }
 
+
+    /**
+     * fetches list of active servers
+     * @return ArrayList<String>: list of all active servers
+     */
     public static ArrayList<String> fetchActiveChunkservers() {
         ArrayList<String> chunkServers = new ArrayList<>();
         lastHeartBeatTimeOfServers.forEach( (chunkserver, lastBeat) -> chunkServers.add(chunkserver));

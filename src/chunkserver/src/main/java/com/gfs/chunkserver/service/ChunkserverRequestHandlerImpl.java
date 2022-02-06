@@ -22,6 +22,8 @@ import java.net.Socket;
 @Service
 public class ChunkserverRequestHandlerImpl {
 
+
+
     /**
      * This method handles different types of request where source is another chunkserver
      * @param socket: socket connected to the other chunkserver
@@ -42,7 +44,7 @@ public class ChunkserverRequestHandlerImpl {
                     break;
             }
         } catch (Exception e) {
-            log.error("Error : {}", e);
+            log.error("Error :", e);
         }
     }
 
@@ -57,7 +59,7 @@ public class ChunkserverRequestHandlerImpl {
             String chunkserverRequestString = (String) objectInputStream.readObject();
             ChunkserverChunkserverFinalWriteRequest chunkserverChunkserverFinalWriteRequest = JsonHandler.convertStringToObject(chunkserverRequestString, ChunkserverChunkserverFinalWriteRequest.class);
             ResponseStatus responseStatus = writeToFileFromCache(chunkserverChunkserverFinalWriteRequest.getChunkHandle());
-            ChunkserverResponse chunkserverResponse = new ChunkserverResponse(responseStatus, null);
+            ChunkserverResponse chunkserverResponse = new ChunkserverResponse(responseStatus, null, null);
             objectOutputStream.writeObject(JsonHandler.convertObjectToString(chunkserverResponse));
         } catch (IOException | ClassNotFoundException e) {
             log.error("Error in HandleClientRequestTask:", e);
@@ -76,7 +78,8 @@ public class ChunkserverRequestHandlerImpl {
             return ResponseStatus.ERROR;
         }
         FileHandlingService.writeFile(chunkHandle, chunkCacheData.getData());
-        // TODO : update metadata
+        ChunkserverMetadataServiceImpl chunkserverMetadataService = ChunkserverMetadataServiceImpl.getInstance();
+        chunkserverMetadataService.insertChunkMetadata(chunkHandle);
         chunkCacheService.deleteFromChunkCache(chunkHandle);
         return ResponseStatus.SUCCESS;
     }

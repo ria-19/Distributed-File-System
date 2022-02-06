@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 public class ChunkserverResponse <T>{
     private ResponseStatus responseStatus;
     private T data;
+    private String error;
 }
