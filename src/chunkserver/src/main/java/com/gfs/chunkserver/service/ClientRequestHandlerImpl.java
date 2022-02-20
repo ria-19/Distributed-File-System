@@ -1,5 +1,6 @@
 package com.gfs.chunkserver.service;
 
+import com.gfs.chunkserver.exception.ConnectionException;
 import com.gfs.chunkserver.model.*;
 import com.gfs.chunkserver.model.request.ChunkserverChunkserverFinalWriteRequest;
 import com.gfs.chunkserver.model.request.ClientChunkserverReadRequest;
@@ -10,6 +11,7 @@ import com.gfs.chunkserver.model.response.ChunkserverResponse;
 import com.gfs.chunkserver.model.response.ResponseStatus;
 import com.gfs.chunkserver.utils.FileHandlingService;
 import com.gfs.chunkserver.utils.JsonHandler;
+import com.gfs.chunkserver.utils.RetryUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -138,7 +140,7 @@ public class ClientRequestHandlerImpl {
         int secondaryChunkServerPort = Integer.parseInt(secondaryChunkServerSocketAddress.split(":")[1]);
         ChunkserverResponse chunkserverResponse = new ChunkserverResponse();
         try{
-            Socket socketForSecondaryCS = new Socket(secondaryChunkServerHost, secondaryChunkServerPort);
+            Socket socketForSecondaryCS = connectWithChunkserver(secondaryChunkServerHost, secondaryChunkServerPort);
             ObjectInputStream objectInputStreamForSecondaryCS = new ObjectInputStream(socketForSecondaryCS.getInputStream());
             ObjectOutputStream objectOutputStreamForSecondaryCS = new ObjectOutputStream(socketForSecondaryCS.getOutputStream());
             objectOutputStreamForSecondaryCS.writeObject(JsonHandler.convertObjectToString(Source.CHUNKSERVER));
@@ -151,5 +153,25 @@ public class ClientRequestHandlerImpl {
             log.error("Error : {}", e);
         }
         return chunkserverResponse;
+    }
+
+    private Socket connectWithChunkserver(String secondaryChunkServerHost, int secondaryChunkServerPort) throws ConnectionException {
+        Socket socket = null;
+        RetryUtils retryUtils = new RetryUtils(3);
+        while(retryUtils.canRetry()) {
+            try {
+                log.info("Establishing connection with CS host={}, port={}", secondaryChunkServerHost, secondaryChunkServerPort);
+                socket = new Socket(secondaryChunkServerHost, secondaryChunkServerPort);
+                log.info("Connected to master server : {}", socket);
+                retryUtils.stopRetry();
+            } catch (IOException e) {
+                log.error("Server connection exception :", e);
+                retryUtils.retry();
+            }
+        }
+        if(!retryUtils.canRetry()) {
+            throw new ConnectionException("Unable to reach chunk server.");
+        }
+        return socket;
     }
 }
