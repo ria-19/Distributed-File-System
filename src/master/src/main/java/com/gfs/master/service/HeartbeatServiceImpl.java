@@ -39,7 +39,8 @@ public class HeartbeatServiceImpl {
             if(diffInMilliSeconds >= Constants.serverTimeoutTime) {
                 log.info("Server {} removed : ", serverUrl);
                 lastHeartBeatTimeOfServers.remove(serverUrl);
-                //TODO : Update chunks metadata and remove this chunkserver
+                MetadataServiceImpl metadataService = MetadataServiceImpl.getInstance();
+                metadataService.removeChunkServerData(serverUrl);
             }
         }
         log.info("Active servers and their last heartbeats: {}", lastHeartBeatTimeOfServers);

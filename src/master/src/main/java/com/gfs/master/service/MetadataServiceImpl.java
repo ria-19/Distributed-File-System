@@ -5,6 +5,7 @@ import com.gfs.master.model.request.ChunkServerChunkMetadata;
 import com.gfs.master.model.response.MasterClientMetadataResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -18,10 +19,12 @@ public class MetadataServiceImpl {
     private static MetadataServiceImpl instance;
     private HashMap<String, File> fileMap; // <filename,File>
     private HashMap<String, ChunkMetadata> chunkMap; // <chunkhandle, ChunkMetadata>
+    private HashMap<String, List<String>> chunkserverDataMap; // <chunkserverurl, chunkhandleList>
 
     private MetadataServiceImpl(){
         this.fileMap = new HashMap<>();
         this.chunkMap = new HashMap<>();
+        this.chunkserverDataMap = new HashMap<>();
         log.info("Filemap={}, Chunkmap={}", fileMap, chunkMap);
     }
 
@@ -60,6 +63,8 @@ public class MetadataServiceImpl {
      */
     public synchronized void updateChunkMetadata(ArrayList<ChunkServerChunkMetadata>  chunkServerChunkMetadataList) {
         log.info("Inside updateChunkMetadata() with chunkServerChunkMetadata={}", chunkServerChunkMetadataList);
+        List<String> chunkHandleList = new ArrayList<>();
+        String chunkServerUrl = "";
         for(ChunkServerChunkMetadata chunkServerChunkMetadata : chunkServerChunkMetadataList) {
             String chunkHandle = chunkServerChunkMetadata.getChunkHandle();
             ChunkMetadata chunkMetadata = this.chunkMap.get(chunkHandle);
@@ -73,9 +78,15 @@ public class MetadataServiceImpl {
             chunklocationMap.put(chunkServerChunkMetadata.getLocation().getChunkserverUrl(), chunkServerChunkMetadata.getLocation());
             chunkMetadata.setLocations(chunklocationMap);
             this.chunkMap.put(chunkHandle, chunkMetadata);
+            chunkHandleList.add(chunkHandle);
+            chunkServerUrl = chunkServerChunkMetadata.getLocation().getChunkserverUrl();
+        }
+        if(!chunkServerUrl.equals("")){
+            chunkserverDataMap.put(chunkServerUrl, chunkHandleList);
         }
         log.info("Filemap after update:{}", fileMap);
         log.info("Chunkmap after update: {}", chunkMap);
+        log.info("ChunkServerMap after update : {}", chunkserverDataMap);
     }
 
     /**
@@ -134,7 +145,7 @@ public class MetadataServiceImpl {
      * @param offset : offset of data
      * @param chunkMetadata : metadata for the given chunk
      */
-    private void insertNewlyGeneratedMetadata(String filename, Integer offset, ChunkMetadata chunkMetadata) {
+    private synchronized void insertNewlyGeneratedMetadata(String filename, Integer offset, ChunkMetadata chunkMetadata) {
         HashMap<Integer, String> offsetChunkHandleMap = new HashMap<>();
         offsetChunkHandleMap.put(offset, chunkMetadata.getChunkHandle());
         File file = new File(filename, offsetChunkHandleMap);
@@ -171,4 +182,19 @@ public class MetadataServiceImpl {
         return locations.entrySet().iterator().next().getKey();
     }
 
+    public synchronized void removeChunkServerData(String chunkserverUrl) {
+        List<String> chunkHandles = chunkserverDataMap.get(chunkserverUrl);
+        for(String chunkHandle : chunkHandles) {
+            ChunkMetadata chunkMetadata = chunkMap.get(chunkHandle);
+            HashMap<String, Location> chunkHandleLocations = chunkMetadata.getLocations();
+            chunkHandleLocations.remove(chunkserverUrl);
+            if(chunkHandleLocations.isEmpty()) {
+                chunkMap.remove(chunkHandle);
+            } else {
+                chunkMetadata.setLocations(chunkHandleLocations);
+                chunkMap.put(chunkHandle, chunkMetadata);
+            }
+        }
+
+    }
 }
