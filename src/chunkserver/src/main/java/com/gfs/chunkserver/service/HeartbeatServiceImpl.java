@@ -1,16 +1,19 @@
 package com.gfs.chunkserver.service;
 
+import com.gfs.chunkserver.exception.ConnectionException;
 import com.gfs.chunkserver.model.request.ChunkServerRequest;
 import com.gfs.chunkserver.model.ChunkServerChunkMetadata;
 import com.gfs.chunkserver.model.Location;
 import com.gfs.chunkserver.model.Source;
 import com.gfs.chunkserver.utils.JsonHandler;
+import com.gfs.chunkserver.utils.RetryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -68,9 +71,23 @@ public class HeartbeatServiceImpl {
      * This method establishes connection with master
      * @return Socket: socket connected with master server
      */
-    private static Socket establishConnectionWithMaster() throws IOException {
-        Socket socket = new Socket(masterServerHost, masterServerPort);
-        log.info("Connected to server : {}", socket);
+    private static Socket establishConnectionWithMaster() throws ConnectionException{
+        Socket socket = null;
+        RetryUtils retryUtils = new RetryUtils(3);
+        while(retryUtils.canRetry()) {
+            try {
+                log.info("Establishing connection with master for heartbeat. Master host={}, port={}", masterServerHost, masterServerPort);
+                socket = new Socket(masterServerHost, masterServerPort);
+                log.info("Connected to master server : {}", socket);
+                retryUtils.stopRetry();
+            } catch (IOException e) {
+                log.error("Server connection exception :", e);
+                retryUtils.retry();
+            }
+        }
+        if(!retryUtils.canRetry()) {
+            throw new ConnectionException("Unable to reach master server.");
+        }
         return socket;
     }
 
@@ -78,8 +95,6 @@ public class HeartbeatServiceImpl {
      * This function starts sending heartbeats to master server
      */
     public static void startHeartbeatForMaster() {
-        log.info("Establishing connection with master for heartbeat. Master host={}, port={}", masterServerHost, masterServerPort);
-        //TODO: enable retry mechanism
         try {
             Socket socket = establishConnectionWithMaster();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -87,7 +102,7 @@ public class HeartbeatServiceImpl {
             sendHearbeatToMaster(objectOutputStream);
             socket.close();
         } catch (Exception e) {
-            log.error("Error:", e);
+            log.error("Exception :", e);
         }
     }
 
